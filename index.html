@@ -858,8 +858,8 @@
                 <h2 id="heroTitle">Unlimited Entertainment</h2>
                 <p id="heroDesc">Stream thousands of movies and TV shows in HD quality. Anytime, anywhere.</p>
                 <div class="hero-btns">
-                    <button class="btn btn-primary"><i class="fas fa-play"></i> Start Watching</button>
-                    <button class="btn btn-secondary"><i class="fas fa-info-circle"></i> More Info</button>
+                    <button class="btn btn-primary" id="startWatchingBtn"><i class="fas fa-play"></i> Start Watching</button>
+                    <button class="btn btn-secondary" id="moreInfoBtn"><i class="fas fa-info-circle"></i> More Info</button>
                 </div>
             </div>
         </section>
@@ -1030,6 +1030,8 @@
         const castContainer = document.getElementById('castContainer');
         const castGrid = document.getElementById('castGrid');
         const watchBtn = document.getElementById('watchBtn');
+        const startWatchingBtn = document.getElementById('startWatchingBtn');
+        const moreInfoBtn = document.getElementById('moreInfoBtn');
 
         // Video Modal Elements
         const videoModal = document.getElementById('videoModal');
@@ -1176,6 +1178,13 @@
             // Episode selection change
             episodeSelect.addEventListener('change', (e) => {
                 currentEpisode = parseInt(e.target.value);
+            });
+
+            // Hero buttons
+            startWatchingBtn.addEventListener('click', () => {
+                if (heroMovies.length > 0) {
+                    playVideo(heroMovies[currentHeroIndex]);
+                }
             });
 
         }
