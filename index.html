@@ -904,6 +904,8 @@
                         <p><strong>Rating:</strong> <span id="modalRating"></span></p>
                         <p><strong>Language:</strong> <span id="modalLanguage"></span></p>
                         <p><strong>Runtime:</strong> <span id="modalRuntime"></span></p>
+                        <p><strong>Genres:</strong> <span id="modalGenres"></span></p>
+                        <p><strong>Director:</strong> <span id="modalDirector"></span></p>
                     </div>
                     <div class="cast-container" id="castContainer">
                         <h3>Cast</h3>
@@ -1028,6 +1030,8 @@
         const modalRating = document.getElementById('modalRating');
         const modalLanguage = document.getElementById('modalLanguage');
         const modalRuntime = document.getElementById('modalRuntime');
+        const modalGenres = document.getElementById('modalGenres');
+        const modalDirector = document.getElementById('modalDirector');
         const modalOverview = document.getElementById('modalOverview');
         const seasonSelector = document.getElementById('seasonSelector');
         const seasonSelect = document.getElementById('seasonSelect');
@@ -1478,6 +1482,10 @@
                     seasonSelector.style.display = 'block';
                     loadTVSeasons(item);
                 }
+
+                modalGenres.textContent = item.genres ? item.genres.map(g => g.name).join(', ') : 'N/A';
+                const director = item.credits?.crew?.find(c => c.job === 'Director');
+                modalDirector.textContent = director ? director.name : 'N/A';
 
                 detailModal.style.display = 'block';
             } catch (error) {
