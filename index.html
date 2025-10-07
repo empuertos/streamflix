@@ -320,19 +320,17 @@
             background-color: rgba(0, 0, 0, 0.9);
             z-index: 1000;
             overflow: visible;
-            padding: 2rem;
+            padding: 0;
         }
 
         .modal-content {
             background: linear-gradient(to bottom right, var(--dark), var(--secondary));
-            width: 95%;
-            max-width: 1200px;
-            margin: 2rem auto;
-            border-radius: 15px;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            border-radius: 0;
             overflow-y: auto;
-            height: auto;
-            max-height: 90vh;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: none;
         }
 
         .modal-header {
@@ -687,6 +685,10 @@
 
             .modal-body {
                 flex-direction: column;
+                padding: 1rem;
+            }
+            .modal-header {
+                padding: 1rem;
             }
             .modal-poster {
                 width: 100%;
@@ -736,6 +738,24 @@
         @media (max-width: 480px) {
             .watch-btn {
                 width: 100%;
+            }
+        }
+
+        /* Desktop popup styling for detail modal */
+        @media (min-width: 769px) {
+            .modal-content {
+                width: 90%;
+                max-width: 1400px;
+                height: auto;
+                max-height: 90vh;
+                margin: 5vh auto;
+                border-radius: 15px;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            }
+
+            .modal-details {
+                max-width: 600px;
             }
         }
 
@@ -1561,7 +1581,7 @@
             const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : 'https://via.placeholder.com/1920x1080/1a1a2e/00FF9D?text=No+Image';
             document.querySelector('.hero').style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdropUrl}')`;
             document.getElementById('heroTitle').textContent = movie.title;
-            document.getElementById('heroDesc').textContent = movie.overview ? movie.overview.substring(0, 150) + '...' : 'No description available.';
+            document.getElementById('heroDesc').textContent = movie.overview || 'No description available.';
         }
 
         // Check if device is mobile
