@@ -1186,6 +1186,12 @@
                     playVideo(heroMovies[currentHeroIndex]);
                 }
             });
+            moreInfoBtn.addEventListener('click', () => {
+                if (heroMovies.length > 0) {
+                    currentMode = 'movie';
+                    showDetails(heroMovies[currentHeroIndex].id);
+                }
+            });
 
         }
 
