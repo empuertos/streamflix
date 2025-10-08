@@ -971,7 +971,7 @@
                         <select class="selector-select" id="providerSelect">
                             <option value="">Select Provider</option>
                             <option value="111movies">111Movies</option>
-                            <option value="autoembed">AutoEmbed</option>
+                            <option value="autoembed.pro">AutoEmbed.pro</option>
                             <option value="moviemaze.cc">MovieMaze.cc</option>
                             <option value="videasy">VideoEasy</option>
                             <option value="vidfast">Vidfast</option>
@@ -1252,8 +1252,8 @@
                     url = `https://111movies.com/movie/${currentItem.id}`;
                 } else if (provider === 'vidsrc') {
                     url = `https://vidsrc.cc/v2/embed/movie/${currentItem.id}`;
-                } else if (provider === 'autoembed') {
-                    url = `https://vidsrc.xyz/embed/movie?tmdb=${currentItem.id}`;
+                } else if (provider === 'autoembed.pro') {
+                    url = `https://autoembed.pro/embed/movie?tmdb=${currentItem.id}`;
                 } else if (provider === 'moviemaze.cc') {
                     url = `https://moviemaze.cc/watch/movie/${currentItem.id}`;
                 } else if (provider === 'videasy') {
@@ -1272,8 +1272,7 @@
                     url = `https://vidsrc.to/embed/movie/${currentItem.id}`;
                 } else if (provider === 'vixsrc.to') {
                     url = `https://vixsrc.to/movie/${currentItem.id}/`;
-                } else if (provider === 'warezcdn') {
-                    url = `https://embed.warezcdn.com/filme/${currentItem.external_ids.imdb_id}`;
+            
                 }
             } else {
                 if (provider === '111movies') {
@@ -1281,7 +1280,7 @@
                 } else if (provider === 'vidsrc') {
                     url = `https://vidsrc.cc/v2/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
                 } else if (provider === 'autoembed') {
-                    url = `https://vidsrc.xyz/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
+                    url = `https://autoembed.pro/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
                 } else if (provider === 'moviemaze.cc') {
                     url = `https://moviemaze.cc/watch/tv/${currentItem.id}?ep=${currentEpisode}&season=${currentSeason}`;
                 } else if (provider === 'videasy') {
@@ -1300,9 +1299,7 @@
                     url = `https://vidsrc.to/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
                 } else if (provider === 'vixsrc.to') {
                     url = `https://vixsrc.to/tv/${currentItem.id}/${currentSeason}/${currentEpisode}/`;
-                } else if (provider === 'warezcdn') {
-                    url = `https://embed.warezcdn.com/serie/${currentItem.external_ids.imdb_id}/${currentSeason}/${currentEpisode}`;
-                }
+                } 
             }
             videoLink.value = url;
             playSelectedVideo(url, provider);
