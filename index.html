@@ -1253,7 +1253,7 @@
                 } else if (provider === 'vidsrc') {
                     url = `https://vidsrc.cc/v2/embed/movie/${currentItem.id}`;
                 } else if (provider === 'autoembed.pro') {
-                    url = `https://autoembed.pro/embed/movie?tmdb=${currentItem.id}`;
+                    url = `https://autoembed.pro/embed/movie/${currentItem.id}`;
                 } else if (provider === 'moviemaze.cc') {
                     url = `https://moviemaze.cc/watch/movie/${currentItem.id}`;
                 } else if (provider === 'videasy') {
@@ -1280,7 +1280,7 @@
                 } else if (provider === 'vidsrc') {
                     url = `https://vidsrc.cc/v2/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
                 } else if (provider === 'autoembed') {
-                    url = `https://autoembed.pro/embed/tv?tmdb=${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
+                    url = `https://autoembed.pro/embed/tv/${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
                 } else if (provider === 'moviemaze.cc') {
                     url = `https://moviemaze.cc/watch/tv/${currentItem.id}?ep=${currentEpisode}&season=${currentSeason}`;
                 } else if (provider === 'videasy') {
