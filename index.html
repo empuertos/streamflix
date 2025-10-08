@@ -867,7 +867,7 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1>StreamFlix</h1>
+                <h1><i class="fas fa-play-circle"></i> StreamFlix</h1>
             </div>
             <div class="search-container">
                 <input type="text" class="search-box" id="searchInput" placeholder="Search movies and TV shows...">
@@ -1278,7 +1278,7 @@
                     url = `https://111movies.com/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
                 } else if (provider === 'vidsrc') {
                     url = `https://vidsrc.cc/v2/embed/tv/${currentItem.id}/${currentSeason}/${currentEpisode}`;
-                } else if (provider === 'autoembed') {
+                } else if (provider === 'autoembed.pro') {
                     url = `https://autoembed.pro/embed/tv/${currentItem.id}&season=${currentSeason}&episode=${currentEpisode}`;
                 } else if (provider === 'moviemaze.cc') {
                     url = `https://moviemaze.cc/watch/tv/${currentItem.id}?ep=${currentEpisode}&season=${currentSeason}`;
