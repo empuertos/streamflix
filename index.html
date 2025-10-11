@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1800,7 +1801,14 @@
 
             // Watch button in modal
             watchBtn.addEventListener('click', () => {
-                openPlayerInNewTab();
+                const movieParams = new URLSearchParams({
+                    id: currentItem.id,
+                    mode: currentMode,
+                    season: currentSeason,
+                    episode: currentEpisode
+                });
+                // Redirect to player page on same domain instead of external link
+                window.location.href = `/player?${movieParams}`;
             });
 
             // Clear History button (inside settings)
@@ -1843,7 +1851,15 @@
             // Hero buttons
             startWatchingBtn.addEventListener('click', () => {
                 if (heroMovies.length > 0) {
-                    playVideo(heroMovies[currentHeroIndex]);
+                    const heroMovie = heroMovies[currentHeroIndex];
+                    const movieParams = new URLSearchParams({
+                        id: heroMovie.id,
+                        mode: 'movie',
+                        season: 1,
+                        episode: 1
+                    });
+                    // Redirect to player page on same domain
+                    window.location.href = `/player?${movieParams}`;
                 }
             });
             moreInfoBtn.addEventListener('click', () => {
