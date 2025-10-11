@@ -52,6 +52,9 @@
             background-color: var(--secondary);
             color: var(--text);
             line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         header {
@@ -61,6 +64,10 @@
             top: 0;
             z-index: 100;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        main {
+            flex-grow: 1;
         }
 
         .navbar {
@@ -307,6 +314,11 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(22px); }
 
+        .nav-actions .theme-switch {
+            align-self: center; /* Ensures vertical alignment with other buttons */
+        }
+
+
         .content-section {
             margin-bottom: 2rem;
         }
@@ -409,6 +421,80 @@
             margin-bottom: 3rem;
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Horizontal Scroll Grid (for Netflix-style rows) */
+        .horizontal-scroll-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+        }
+
+        .horizontal-scroll-grid::-webkit-scrollbar {
+            height: 8px;
+        }
+        .horizontal-scroll-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .horizontal-scroll-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .horizontal-scroll-grid::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* Horizontal Scroll Container with Arrows */
+        .horizontal-scroll-container {
+            position: relative;
+            margin: 0 -1rem; /* Compensate for arrow padding */
+            padding: 0 1rem;
+        }
+
+        .scroll-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(22, 33, 62, 0.8);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            display: none; /* Hidden by default, shown by JS */
+            transition: background-color 0.3s, opacity 0.3s, transform 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .scroll-arrow:hover {
+            background-color: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-arrow.left-arrow {
+            left: 10px;
+        }
+
+        .scroll-arrow.right-arrow {
+            right: 10px;
+        }
+
         .content-card {
             background-color: var(--dark);
             border-radius: 10px;
@@ -418,6 +504,13 @@
             transition: all 0.3s;
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0; /* Start hidden for animation */
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .horizontal-scroll-grid .content-card {
+            width: 220px; /* Fixed width for horizontal items */
+            flex-shrink: 0; /* Prevent cards from shrinking */
         }
 
         .content-card:hover {
@@ -1397,6 +1490,33 @@
         .search-suggestion-item:hover {
             background: var(--secondary);
         }
+
+        /* Back to Top Button */
+        .back-to-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: var(--secondary);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.4);
+        }
+
+        .back-to-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -1412,6 +1532,10 @@
                     <button class="search-btn" id="searchBtn"><i class="fas fa-search" aria-hidden="true"></i> Search</button>
                     <div id="searchSuggestions" class="search-suggestions"></div>
                 </div>
+                <label class="theme-switch" aria-label="Toggle dark mode">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
                 <button id="settingsBtn" class="header-btn" aria-label="Open settings"><i class="fas fa-cog"></i></button>
             </div>
         </nav>
@@ -1467,8 +1591,12 @@
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-history" aria-hidden="true"></i> Continue Watching</h2>
             </div>
-            <div class="content-grid" id="continueWatchingGrid">
-                <!-- History items will be loaded here -->
+            <div class="horizontal-scroll-container">
+                <button class="scroll-arrow left-arrow" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                <div class="horizontal-scroll-grid" id="continueWatchingGrid">
+                    <!-- History items will be loaded here -->
+                </div>
+                <button class="scroll-arrow right-arrow" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
             </div>
         </section>
 
@@ -1477,8 +1605,12 @@
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-heart" aria-hidden="true"></i> My Favorites</h2>
             </div>
-            <div class="content-grid" id="favoritesGrid">
-                <!-- Favorite items will be loaded here -->
+            <div class="horizontal-scroll-container">
+                <button class="scroll-arrow left-arrow" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                <div class="horizontal-scroll-grid" id="favoritesGrid">
+                    <!-- Favorite items will be loaded here -->
+                </div>
+                <button class="scroll-arrow right-arrow" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
             </div>
         </section>
 
@@ -1495,6 +1627,8 @@
         <button class="btn btn-secondary" id="loadMore" style="display: none; margin: 0 auto;">Load More</button>
     </div>
     </main>
+
+    <button id="backToTopBtn" class="back-to-top-btn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
 
     <footer>
         <div class="footer-content">
@@ -1583,16 +1717,6 @@
                 <button class="close-modal" id="closeSettingsModal">&times;</button>
             </div>
             <div class="modal-body" style="flex-direction: column;">
-                <div class="settings-section">
-                    <h4>Appearance</h4>
-                    <div class="setting-item">
-                        <span>Dark Mode</span>
-                        <label class="theme-switch">
-                            <input type="checkbox" id="themeSwitch">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
                 <div class="settings-section">
                     <h4>Data Management</h4>
                     <div class="setting-item">
@@ -1855,6 +1979,14 @@
                 }
             });
 
+            // Back to top button
+            window.addEventListener('scroll', handleScroll);
+            document.getElementById('backToTopBtn').addEventListener('click', scrollToTop);
+
+            // Horizontal scroll arrows
+            document.querySelectorAll('.horizontal-scroll-container').forEach(container => {
+                setupScrollArrows(container);
+            });
         }
 
         // --- Theme Functions ---
@@ -2170,25 +2302,25 @@
             }
 
             const fragment = document.createDocumentFragment();
-            items.forEach(item => {
-                fragment.appendChild(createContentCard(item));
+            items.forEach((item, index) => {
+                fragment.appendChild(createContentCard(item, index));
             });
 
-            gridElement.innerHTML = ''; // Clear previous content (skeletons or old results)
+            gridElement.innerHTML = ''; // Clear previous content
             gridElement.appendChild(fragment);
         }
 
         // Append content for "Load More"
         function appendContent(items, gridElement = contentGrid) {
             const fragment = document.createDocumentFragment();
-            items.forEach(item => {
-                fragment.appendChild(createContentCard(item));
+            items.forEach((item, index) => {
+                fragment.appendChild(createContentCard(item, (currentPage - 1) * 20 + index));
             });
             gridElement.appendChild(fragment);
         }
 
         // Create a single content card element
-        function createContentCard(item) {
+        function createContentCard(item, index) {
             const card = document.createElement('div');
             card.className = 'content-card';
             const itemMode = item.mode || currentMode; // Use item's mode if available (from history)
@@ -2196,6 +2328,9 @@
             const date = itemMode === 'movie' ? item.release_date : item.first_air_date;
             const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
             
+            // Add staggered animation delay
+            card.style.animationDelay = `${index * 50}ms`;
+
             card.innerHTML = `
                 <img src="${posterPath}" alt="${title}" class="card-img">
                 <div class="card-content">
@@ -2330,7 +2465,7 @@
             if (!movieItem) return;
 
             // Open the external link directly in a new tab
-            const externalUrl = `https://empuertos.github.io/movielist/player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}`;
+            const externalUrl = `https://streamflix-use.vercel.app/player?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}`;
             const newWindow = window.open(externalUrl, '_blank');
 
             if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
@@ -2402,6 +2537,57 @@
             document.getElementById('closeInstall').addEventListener('click', () => {
                 modal.remove();
             });
+        }
+
+        // --- Scroll Functions ---
+
+        function handleScroll() {
+            const backToTopBtn = document.getElementById('backToTopBtn');
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function setupScrollArrows(container) {
+            const grid = container.querySelector('.horizontal-scroll-grid');
+            const leftArrow = container.querySelector('.left-arrow');
+            const rightArrow = container.querySelector('.right-arrow');
+
+            function updateArrowVisibility() {
+                const scrollLeft = grid.scrollLeft;
+                const scrollWidth = grid.scrollWidth;
+                const clientWidth = grid.clientWidth;
+
+                // Show/hide left arrow
+                leftArrow.style.display = scrollLeft > 0 ? 'block' : 'none';
+
+                // Show/hide right arrow
+                rightArrow.style.display = scrollLeft < (scrollWidth - clientWidth - 1) ? 'block' : 'none';
+            }
+
+            leftArrow.addEventListener('click', () => {
+                grid.scrollBy({ left: -grid.clientWidth * 0.8, behavior: 'smooth' });
+            });
+
+            rightArrow.addEventListener('click', () => {
+                grid.scrollBy({ left: grid.clientWidth * 0.8, behavior: 'smooth' });
+            });
+
+            // Update on scroll
+            grid.addEventListener('scroll', updateArrowVisibility);
+
+            // Update when new content is added (using MutationObserver)
+            const observer = new MutationObserver(() => {
+                // A short delay ensures layout has been calculated
+                setTimeout(updateArrowVisibility, 100);
+            });
+            observer.observe(grid, { childList: true });
         }
 
     </script>
