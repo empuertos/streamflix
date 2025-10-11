@@ -745,6 +745,19 @@
             border-color: var(--accent);
         }
 
+        .trailer-btn {
+            background-color: transparent;
+            color: #f39c12; /* Orange for trailers */
+            border: 2px solid #f39c12;
+        }
+
+        .trailer-btn:hover {
+            background-color: #f39c12;
+            color: var(--secondary);
+            border-color: #f39c12;
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
         /* Make secondary action buttons in modal smaller. Use !important to ensure override. */
         .action-buttons .favorite-btn,
         .action-buttons .share-btn {
@@ -1668,10 +1681,10 @@
     </footer>
 
     <!-- Detail Modal -->
-    <div class="modal" id="detailModal" role="dialog" aria-modal="true">
-        <div class="modal-content">
+    <div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content" tabindex="-1">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Movie Title</h2>
+                <h2 class="modal-title" id="modalTitle"></h2>
                 <button class="close-modal" id="closeModal">&times;</button>
             </div>
             <div class="modal-body">
@@ -1698,6 +1711,7 @@
                         <p id="modalOverview">No overview available.</p>
                         <div class="action-buttons">
                             <button class="watch-btn" id="watchBtn"><i class="fas fa-play" aria-hidden="true"></i> Watch Now</button>
+                            <button class="btn btn-secondary trailer-btn" id="trailerBtn" style="display: none;"><i class="fas fa-film"></i> Watch Trailer</button>
                             <button class="btn btn-secondary favorite-btn" id="favoriteBtn"><i class="fas fa-heart"></i> Add to Favorites</button>
                             <button class="btn btn-secondary share-btn" id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
                         </div>
@@ -1723,10 +1737,10 @@
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal" id="settingsModal" role="dialog" aria-modal="true">
-        <div class="modal-content">
+    <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+        <div class="modal-content" tabindex="-1">
             <div class="modal-header">
-                <h2 class="modal-title">Settings</h2>
+                <h2 class="modal-title" id="settingsModalTitle">Settings</h2>
                 <button class="close-modal" id="closeSettingsModal">&times;</button>
             </div>
             <div class="modal-body" style="flex-direction: column;">
@@ -1741,6 +1755,19 @@
                         <button id="clearFavoritesBtn" class="btn-clear">Clear</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trailer Modal -->
+    <div class="modal" id="trailerModal" role="dialog" aria-modal="true" aria-labelledby="trailerModalTitle">
+        <div class="modal-content video-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="trailerModalTitle">Trailer</h2>
+                <button class="close-modal" id="closeTrailerModal">&times;</button>
+            </div>
+            <div class="video-player" id="trailerPlayer">
+                <!-- YouTube iframe will be injected here -->
             </div>
         </div>
     </div>
@@ -1764,6 +1791,7 @@
         let heroMovies = [];
         let currentHeroIndex = 0;
         let deferredPrompt;
+        let activeElementBeforeModal;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -1792,6 +1820,9 @@
         const castGrid = document.getElementById('castGrid');
         const watchBtn = document.getElementById('watchBtn');
         const favoriteBtn = document.getElementById('favoriteBtn');
+        const trailerBtn = document.getElementById('trailerBtn');
+        const trailerModal = document.getElementById('trailerModal');
+        const closeTrailerModal = document.getElementById('closeTrailerModal');
         const shareBtn = document.getElementById('shareBtn');
         const startWatchingBtn = document.getElementById('startWatchingBtn');
         const moreInfoBtn = document.getElementById('moreInfoBtn');
@@ -1914,23 +1945,19 @@
             });
 
             // Settings Modal
-            settingsBtn.addEventListener('click', openSettingsModal);
-            closeSettingsModal.addEventListener('click', () => settingsModal.style.display = 'none');
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) {
-                    settingsModal.style.display = 'none';
-                }
-            });
+            settingsBtn.addEventListener('click', () => openModal(settingsModal));
+            closeSettingsModal.addEventListener('click', () => closeModal(settingsModal));
 
             // Theme switch inside settings
             themeSwitch.addEventListener('change', toggleTheme);
 
             loadMoreBtn.addEventListener('click', loadMore);
-            closeModal.addEventListener('click', () => {
-                detailModal.style.display = 'none';
+            closeModal.addEventListener('click', (e) => {
+                closeModal(detailModal);
                 // If we were in a search context, clear the input now.
                 // This triggers the input handler to reset the view.
                 if (searchInput.value.trim() !== '') {
+                    e.stopPropagation(); // Prevent outer modal click listener from firing
                     searchInput.value = '';
                     handleSearchInput();
                 }
@@ -1938,12 +1965,14 @@
 
             // Close modals when clicking outside
             detailModal.addEventListener('click', (e) => {
-                if (e.target === detailModal) {
-                    detailModal.style.display = 'none';
-                    searchInput.value = '';
-                    handleSearchInput();
-                }
+                if (e.target === detailModal) closeModal(detailModal);
             });
+
+            // Trailer Modal listeners
+            trailerModal.addEventListener('click', (e) => {
+                if (e.target === trailerModal) closeModal(trailerModal);
+            });
+            closeTrailerModal.addEventListener('click', () => closeModal(trailerModal));
 
             // Watch button in modal
             watchBtn.addEventListener('click', () => {
@@ -2025,11 +2054,66 @@
             localStorage.setItem('streamflixTheme', newTheme);
         }
 
-        function openSettingsModal() {
-            // Ensure the theme switch is in the correct state when opening
-            const currentTheme = document.body.getAttribute('data-theme') || 'dark';
-            themeSwitch.checked = currentTheme === 'dark';
-            settingsModal.style.display = 'block';
+        // --- Accessible Modal Functions ---
+
+        function openModal(modalElement) {
+            activeElementBeforeModal = document.activeElement;
+            modalElement.style.display = 'block';
+            
+            // Focus the modal content wrapper or the first focusable element
+            const focusableElement = modalElement.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusableElement) {
+                focusableElement.focus();
+            } else {
+                modalElement.querySelector('.modal-content').focus();
+            }
+
+            document.addEventListener('keydown', handleModalKeydown);
+            modalElement.addEventListener('click', handleModalClick);
+        }
+
+        function closeModal(modalElement) {
+            if (modalElement.id === 'trailerModal') {
+                // Stop the video when closing the trailer modal
+                document.getElementById('trailerPlayer').innerHTML = '';
+            }
+            modalElement.style.display = 'none';
+            if (activeElementBeforeModal) {
+                activeElementBeforeModal.focus();
+            }
+            document.removeEventListener('keydown', handleModalKeydown);
+            modalElement.removeEventListener('click', handleModalClick);
+        }
+
+        function handleModalClick(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target);
+            }
+        }
+
+        function handleModalKeydown(event) {
+            const openModalElement = document.querySelector('.modal[style*="display: block"]');
+            if (!openModalElement) return;
+
+            // Close on Escape key
+            if (event.key === 'Escape') {
+                closeModal(openModalElement);
+            }
+
+            // Focus trap on Tab key
+            if (event.key === 'Tab') {
+                const focusableElements = Array.from(openModalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'));
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (event.shiftKey && document.activeElement === firstElement) {
+                    event.preventDefault();
+                    lastElement.focus();
+                } else if (!event.shiftKey && document.activeElement === lastElement) {
+                    event.preventDefault();
+                    firstElement.focus();
+                }
+            }
         }
 
         // --- Watch History Functions ---
@@ -2403,7 +2487,7 @@
             card.style.animationDelay = `${index * 50}ms`;
 
             card.innerHTML = `
-                <img src="${posterPath}" alt="${title}" class="card-img">
+                <img src="${posterPath}" alt="${title}" class="card-img" loading="lazy" decoding="async" width="220" height="330">
                 <div class="card-content">
                     <h3 class="card-title" title="${title}">${title}</h3>
                     <div class="card-info">
@@ -2433,7 +2517,7 @@
             // The itemMode is set by the card click handler.
             // We use `currentMode` which now reflects the actual type of the item clicked.
             try {
-                const endpoint = `${API_URL}/${currentMode}/${itemId}?append_to_response=credits,external_ids`;
+                const endpoint = `${API_URL}/${currentMode}/${itemId}?append_to_response=credits,external_ids,videos`;
                 const response = await fetch(endpoint);
                 if (!response.ok) throw new Error('Failed to fetch details.');
                 const item = await response.json();
@@ -2485,8 +2569,31 @@
                 const director = item.credits?.crew?.find(c => c.job === 'Director');
                 modalDirector.textContent = director ? director.name : 'N/A';
 
-                detailModal.style.display = 'block';
+                openModal(detailModal);
                 updateFavoriteButton();
+
+                // Handle Trailer Button
+                const videos = item.videos?.results || [];
+                const officialTrailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official);
+                const anyTrailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer');
+                const trailer = officialTrailer || anyTrailer;
+
+                if (trailer) {
+                    trailerBtn.style.display = 'inline-flex';
+                    trailerBtn.onclick = () => {
+                        const trailerPlayer = document.getElementById('trailerPlayer');
+                        trailerPlayer.innerHTML = `
+                            <iframe class="stream-iframe" 
+                                src="https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0" 
+                                title="YouTube video player" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen></iframe>`;
+                        openModal(trailerModal);
+                    };
+                } else {
+                    trailerBtn.style.display = 'none';
+                }
             } catch (error) {
                 console.error('Error showing details:', error);
                 alert('Could not load details for this item. Please try again.');
@@ -2538,11 +2645,17 @@
             const movieItem = item || currentItem;
             if (!movieItem) return;
 
+            // Generate a simple random token for security
+            const token = Math.random().toString(36).substring(2);
+            // Store it in session storage so the player page can verify it
+            sessionStorage.setItem('streamflix_access_token', token);
+
             // Open the external link directly in a new tab
-            const externalUrl = `https://streamflix-use.vercel.app/player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}`;
-            const newWindow = window.open(externalUrl, '_blank');
+            const externalUrl = `https://streamflix-use.vercel.app/player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}&token=${token}`;
+            const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
 
             if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                sessionStorage.removeItem('streamflix_access_token'); // Clean up if popup fails
                 alert('Please allow popups for this site to watch content.');
                 return;
             }
