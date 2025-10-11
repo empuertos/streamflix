@@ -53,6 +53,35 @@
     </div>
 
     <script>
+        // --- Security Check: Referrer Validation ---
+        (function() {
+            const allowedReferrer = "streamflix-use.vercel.app";
+            const referrer = document.referrer;
+            let isAllowed = false;
+
+            if (referrer) {
+                try {
+                    const referrerUrl = new URL(referrer);
+                    if (referrerUrl.hostname === allowedReferrer) {
+                        isAllowed = true;
+                    }
+                } catch (e) {
+                    // Invalid referrer URL, treat as not allowed
+                    isAllowed = false;
+                }
+            }
+
+            // Always allow for local development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                isAllowed = true;
+            }
+
+            if (!isAllowed) {
+                document.body.innerHTML = `<div class="error" style="display: flex;"><h3>🚫 Access Denied</h3><p>This content can only be accessed from the main site.</p><a href="https://streamflix-use.vercel.app/" style="color: #00FF9D; text-decoration: none; margin-top: 1rem;">Go to StreamFlix</a></div>`;
+                throw new Error("Access denied due to invalid referrer: " + referrer);
+            }
+        })();
+
         // Get movie parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const movieId = urlParams.get('id');
