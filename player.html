@@ -23,14 +23,14 @@
     <div id="playerContainer" class="player-container" style="display: none;">
         <div class="controls">
             <div class="player-actions">
-                <button class="back-btn" onclick="window.history.back()">
-                    <i class="fas fa-arrow-left"></i> Back to Movies
-                </button>
                 <button class="refresh-btn" id="refreshBtn">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
                 <button class="close-player-btn" id="closePlayerBtn">
                     <i class="fas fa-times"></i> Close Player
+                </button>
+                <button class="pip-btn" id="pipBtn" style="display: none;">
+                    <i class="fas fa-clone"></i> PiP
                 </button>
                 <button class="prev-episode-btn" id="prevEpisodeBtn" style="display: none;">
                     <i class="fas fa-arrow-left"></i> Prev Episode
@@ -46,7 +46,12 @@
                 <!-- Provider buttons will be loaded here -->
             </div>
         </div>
-        <iframe id="movieFrame" class="movie-iframe" allowfullscreen allow="autoplay"></iframe>
+        <iframe id="movieFrame" class="movie-iframe" allowfullscreen allow="autoplay; picture-in-picture"></iframe>
+
+        <div id="episodeLoadingOverlay" class="episode-loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Loading episode...</p>
+        </div>
 
         <!-- Autoplay Overlay -->
         <div id="autoplayOverlay" class="autoplay-overlay">
@@ -91,9 +96,9 @@
         // Get movie parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const movieId = urlParams.get('id');
-        const mode = urlParams.get('mode') || 'movie';
-        const season = urlParams.get('season') || '1';
-        const episode = urlParams.get('episode') || '1';
+        let mode = urlParams.get('mode') || 'movie';
+        let season = urlParams.get('season') || '1';
+        let episode = urlParams.get('episode') || '1';
 
         const movieFrame = document.getElementById('movieFrame');
         const movieIframe = document.getElementById('movieFrame'); // Alias for clarity
@@ -109,7 +114,11 @@
         const autoplayOverlay = document.getElementById('autoplayOverlay');
         const autoplayCountdown = document.getElementById('autoplayCountdown');
         const autoplayCancelBtn = document.getElementById('autoplayCancelBtn');
+        const pipBtn = document.getElementById('pipBtn');
+        const episodeLoadingOverlay = document.getElementById('episodeLoadingOverlay');
         let autoplayTimer, countdownInterval;
+        const controls = document.querySelector('.controls');
+        let hideControlsTimer;
         let providers = {};
 
         let currentProvider = localStorage.getItem('streamflixLastProvider') || 'vidora.su'; // Default provider key
@@ -129,6 +138,7 @@
             }
 
             try {
+                episodeLoadingOverlay.style.display = 'none'; // Hide episode overlay if it was visible
                 loadingDiv.style.display = 'flex';
                 errorDiv.style.display = 'none';
                 playerContainer.style.display = 'none';
@@ -159,6 +169,8 @@
                     localStorage.setItem('streamflixLastProvider', provider); // Save the successful provider
                     clearTimeout(loadTimeout); // Cancel the timeout
                     loadingDiv.style.display = 'none';
+                    episodeLoadingOverlay.style.display = 'none';
+                    restoreEpisodeButtons(); // Restore buttons on success
                     playerContainer.style.display = 'block';
                 };
 
@@ -189,10 +201,12 @@
                 currentProvider = nextProvider;
                 loadMovie(nextProvider);
             } else {
+                restoreEpisodeButtons(); // Restore buttons on failure
                 console.error("All providers failed to load.");
                 showError();
             }
         }
+
 
         function updateActiveProviderButton(provider) {
             document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('active'));
@@ -238,6 +252,7 @@
         function showError() {
             loadingDiv.style.display = 'none';
             playerContainer.style.display = 'none';
+            restoreEpisodeButtons(); // Restore buttons on error
             errorDiv.style.display = 'flex';
         }
 
@@ -345,6 +360,79 @@
             observer.observe(document.body, { childList: true, subtree: true });
         }
 
+        // --- Controls Auto-Hide Logic ---
+        function showControls() {
+            controls.classList.remove('hidden');
+            clearTimeout(hideControlsTimer);
+            // Set a timer to hide the controls after 3 seconds of inactivity
+            hideControlsTimer = setTimeout(() => {
+                controls.classList.add('hidden');
+            }, 3000);
+        }
+
+        function hideControlsImmediately() {
+            clearTimeout(hideControlsTimer);
+            controls.classList.add('hidden');
+        }
+
+        // --- Picture-in-Picture Logic ---
+        function setupPipButton() {
+            if ('pictureInPictureEnabled' in document) {
+                pipBtn.style.display = 'inline-flex'; // Show the button if supported
+                pipBtn.addEventListener('click', togglePictureInPicture);
+            }
+        }
+
+        async function togglePictureInPicture() {
+            pipBtn.disabled = true;
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await movieFrame.requestPictureInPicture();
+                }
+            } catch (error) {
+                console.error("PiP Error:", error);
+                alert("Could not enter Picture-in-Picture mode. Your browser might have blocked it.");
+            } finally {
+                pipBtn.disabled = false;
+            }
+        }
+
+        // --- Keyboard Shortcuts ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                playerContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Ignore shortcuts if typing in an input (none on this page, but good practice)
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                switch (e.key.toLowerCase()) {
+                    case 'f':
+                        e.preventDefault();
+                        toggleFullscreen();
+                        break;
+                    case ' ': // Spacebar
+                        // We can't directly play/pause the iframe content, but we can focus it
+                        // so the player inside receives the spacebar press.
+                        e.preventDefault();
+                        movieFrame.focus();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        movieFrame.muted = !movieFrame.muted;
+                        break;
+                }
+            });
+        }
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
             if (movieId) {
@@ -357,6 +445,17 @@
             // Setup ad and pop-up blocking
             setupAdBlocker();
 
+            // Setup PiP button
+            setupPipButton();
+
+            // Setup keyboard shortcuts
+            setupKeyboardShortcuts();
+
+            // Setup controls auto-hide
+            playerContainer.addEventListener('mousemove', showControls);
+            playerContainer.addEventListener('mouseleave', hideControlsImmediately);
+            showControls(); // Initial call to start the timer
+
             refreshBtn.addEventListener('click', () => {
                 console.log('Refreshing player with current provider...');
                 loadMovie(currentProvider);
@@ -366,27 +465,44 @@
 
             autoplayCancelBtn.addEventListener('click', cancelAutoplay);
 
+            function changeEpisode(newEpisode, clickedButton) {
+                if (mode !== 'tv' || !newEpisode || newEpisode < 1) return;
+
+                // Disable buttons and show loading state
+                prevEpisodeBtn.disabled = true;
+                nextEpisodeBtn.disabled = true;
+                if (clickedButton) {
+                    clickedButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+                }
+
+                // Show the in-player loading overlay
+                episodeLoadingOverlay.style.display = 'flex';
+                cancelAutoplay(); // Stop any active autoplay countdown
+
+                // Update state and URL without reloading
+                episode = newEpisode;
+                urlParams.set('episode', episode);
+                history.pushState({ episode: episode }, '', `?${urlParams.toString()}`);
+
+                // Load the new episode content
+                loadMovie(currentProvider);
+            }
+
+            function restoreEpisodeButtons() {
+                prevEpisodeBtn.disabled = false;
+                nextEpisodeBtn.disabled = false;
+                prevEpisodeBtn.innerHTML = `<i class="fas fa-arrow-left"></i> Prev Episode`;
+                nextEpisodeBtn.innerHTML = `Next Episode <i class="fas fa-arrow-right"></i>`;
+            }
+
             if (mode === 'tv') {
-                prevEpisodeBtn.addEventListener('click', () => {
+                prevEpisodeBtn.addEventListener('click', (e) => {
                     const prevEpisode = parseInt(episode) - 1;
-                    if (prevEpisode > 0) {
-                        // Show loading state
-                        prevEpisodeBtn.disabled = true;
-                        nextEpisodeBtn.disabled = true;
-                        prevEpisodeBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
-
-                        urlParams.set('episode', prevEpisode);
-                        window.location.search = urlParams.toString();
-                    }
+                    changeEpisode(prevEpisode, e.currentTarget);
                 });
-                nextEpisodeBtn.addEventListener('click', () => {
-                    // Show loading state
-                    prevEpisodeBtn.disabled = true;
-                    nextEpisodeBtn.disabled = true;
-                    nextEpisodeBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
-
-                    urlParams.set('episode', parseInt(episode) + 1);
-                    window.location.search = urlParams.toString();
+                nextEpisodeBtn.addEventListener('click', (e) => {
+                    const nextEpisode = parseInt(episode) + 1;
+                    changeEpisode(nextEpisode, e.currentTarget);
                 });
             }
         });
