@@ -131,6 +131,7 @@ body {
     transform: translateY(-2px);
 }
 
+.refresh-btn,
 .prev-episode-btn,
 .next-episode-btn {
     border: none;
@@ -142,6 +143,12 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.refresh-btn {
+    background: rgba(80, 150, 255, 0.8);
+    color: #fff;
+    margin-left: 10px;
 }
 
 .prev-episode-btn {
@@ -156,10 +163,12 @@ body {
     margin-left: 5px;
 }
 
+.refresh-btn:hover,
 .prev-episode-btn:hover,
 .next-episode-btn:hover {
     transform: translateY(-2px);
 }
+.refresh-btn:disabled,
 .prev-episode-btn:disabled,
 .next-episode-btn:disabled {
     cursor: not-allowed;
