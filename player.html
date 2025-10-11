@@ -161,9 +161,6 @@
                 // Update active button
                 updateActiveProviderButton(provider);
                 
-                // Fetch movie details
-                await fetchMovieDetails();
-
                 const streamApiUrl = `${API_URL}/stream?provider=${provider}&id=${movieId}&mode=${mode}&season=${season}&episode=${episode}`;
                 const response = await fetch(streamApiUrl);
                 const data = await response.json();
@@ -454,6 +451,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (movieId) {
                 await setupProviderButtons();
+                await fetchMovieDetails(); // Fetch details as soon as possible
                 loadMovie();
             } else {
                 showError();
