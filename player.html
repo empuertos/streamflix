@@ -73,59 +73,17 @@
         const autoplayCountdown = document.getElementById('autoplayCountdown');
         const autoplayCancelBtn = document.getElementById('autoplayCancelBtn');
         let autoplayTimer, countdownInterval;
+        let providers = {};
 
-        let currentProvider = localStorage.getItem('streamflixLastProvider') || 'vidora.su';
-        const providerKeys = Object.keys(providers);
-        let currentProviderIndex = providerKeys.indexOf(currentProvider);
+        let currentProvider = localStorage.getItem('streamflixLastProvider') || 'vidora.su'; // Default provider key
+        let providerKeys = [];
+        let currentProviderIndex = 0;
         let loadTimeout;
         const LOAD_TIMEOUT_DURATION = 10000; // 10 seconds
         const loadingMessage = document.querySelector('#loading p');
 
         // The worker URL for proxying TMDB API requests
         const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
-
-        // Available streaming providers
-        const providers = {
-            'vidora.su': 'Alpha',
-            'autoembed.pro': 'Bravo',
-            'vidrock.net': 'Charlie',
-            '111movies': 'Delta',
-            'vidsrc': 'Echo',
-            'vidsrc.to': 'Foxtrot',
-            'moviemaze.cc': 'Golf',
-            'vidlink': 'Hotel',
-            'vixsrc.to': 'India'
-        };
-
-        function generateStreamUrl(provider, id, mode, season, episode) {
-            if (mode === 'movie') {
-                switch (provider) {
-                    case 'vidsrc': return `https://vidsrc.cc/v2/embed/movie/${id}`;
-                    case 'vidsrc.to': return `https://vidsrc.to/embed/movie/${id}`;
-                    case 'autoembed.pro': return `https://autoembed.pro/embed/movie/${id}`;
-                    case '111movies': return `https://111movies.com/movie/${id}`;
-                    case 'moviemaze.cc': return `https://moviemaze.cc/watch/movie/${id}`;
-                    case 'vidora.su': return `https://vidora.su/movie/${id}`;
-                    case 'vidlink': return `https://vidlink.pro/movie/${id}`;
-                    case 'vidrock.net': return `https://vidrock.net/movie/${id}`;
-                    case 'vixsrc.to': return `https://vixsrc.to/movie/${id}/`;
-                    default: return `https://vidsrc.cc/v2/embed/movie/${id}`;
-                }
-            } else {
-                switch (provider) {
-                    case 'vidsrc': return `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`;
-                    case 'vidsrc.to': return `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`;
-                    case 'autoembed.pro': return `https://autoembed.pro/embed/tv/${id}?season=${season}&episode=${episode}`;
-                    case '111movies': return `https://111movies.com/tv/${id}/${season}/${episode}`;
-                    case 'moviemaze.cc': return `https://moviemaze.cc/watch/tv/${id}?ep=${episode}&season=${season}`;
-                    case 'vidora.su': return `https://vidora.su/tv/${id}/${season}/${episode}`;
-                    case 'vidlink': return `https://vidlink.pro/tv/${id}/${season}/${episode}`;
-                    case 'vidrock.net': return `https://vidrock.net/tv/${id}/${season}/${episode}`;
-                    case 'vixsrc.to': return `https://vixsrc.to/tv/${id}/${season}/${episode}/`;
-                    default: return `https://vidsrc.cc/v2/embed/tv/${id}/${season}/${episode}`;
-                }
-            }
-        }
 
         async function loadMovie(provider = currentProvider) {
             if (!movieId) {
@@ -145,10 +103,15 @@
                 // Fetch movie details
                 await fetchMovieDetails();
 
-                const streamUrl = generateStreamUrl(provider, movieId, mode, season, episode);
-                console.log(`Loading movie from provider '${provider}':`, streamUrl);
+                const streamApiUrl = `${API_URL}/stream?provider=${provider}&id=${movieId}&mode=${mode}&season=${season}&episode=${episode}`;
+                const response = await fetch(streamApiUrl);
+                const data = await response.json();
+                const streamUrl = data.url;
 
-                movieIframe.src = streamUrl;
+                if (!streamUrl) throw new Error(`Could not get stream URL for provider ${provider}`);
+
+                console.log(`Loading movie from provider '${provider}':`, streamUrl);
+                movieIframe.src = streamUrl; // Set iframe source to the URL from the worker
                 
                 // Clear previous timeout if any
                 if (loadTimeout) clearTimeout(loadTimeout);
@@ -241,11 +204,22 @@
             errorDiv.style.display = 'flex';
         }
 
-        function setupProviderButtons() {
+        async function setupProviderButtons() {
+            const response = await fetch(`${API_URL}/providers`);
+            providers = await response.json();
+            providerKeys = Object.keys(providers);
+            currentProviderIndex = providerKeys.indexOf(currentProvider);
+
             providerButtonsContainer.innerHTML = Object.entries(providers)
                 .map(([value, name]) =>
                     `<button class="provider-btn ${value === currentProvider ? 'active' : ''}" data-provider="${value}">${name}</button>`
                 ).join('');
+
+            // If the saved provider is no longer valid, reset to the first one.
+            if (currentProviderIndex === -1) {
+                currentProviderIndex = 0;
+                currentProvider = providerKeys[0];
+            }
 
             providerButtonsContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('provider-btn')) {
@@ -297,9 +271,9 @@
         }
 
         // Initialize player
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (movieId) {
-                setupProviderButtons();
+                await setupProviderButtons();
                 loadMovie();
             } else {
                 showError();
