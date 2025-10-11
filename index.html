@@ -1807,9 +1807,9 @@
     <script src="config.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Configuration
-        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
-        const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
+        // Configuration from config.js
+        const { API_URLS, IMG_URL } = window.STREAMFLIX_CONFIG;
+        const API_URL = API_URLS[0]; // Use the primary API URL
 
         // State variables
         let currentPage = 1;
@@ -2660,7 +2660,7 @@
                 heroInterval = setInterval(() => {
                     currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
                     updateHero();
-                }, 5000);
+                }, window.STREAMFLIX_CONFIG.HERO_SLIDESHOW_INTERVAL);
             } catch (error) {
                 console.error('Error fetching hero movies:', error);
             }
