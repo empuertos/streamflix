@@ -1804,6 +1804,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         // Configuration
         const IMG_URL = 'https://image.tmdb.org/t/p/w500';
@@ -2116,6 +2117,27 @@
                     event.preventDefault();
                     firstElement.focus();
                 }
+            }
+        }
+
+        function openExternalPlayer(item) {
+            // Use the selected item or current item
+            const movieItem = item || currentItem;
+            if (!movieItem) return;
+
+            // Generate a simple random token for security
+            const token = Math.random().toString(36).substring(2);
+            // Store it in session storage so the player page can verify it
+            sessionStorage.setItem('streamflix_access_token', token);
+
+            // Open the external link directly in a new tab
+            const externalUrl = `player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}&token=${token}`;
+            const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
+
+            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                sessionStorage.removeItem('streamflix_access_token'); // Clean up if popup fails
+                alert('Please allow popups for this site to watch content.');
+                return;
             }
         }
 
