@@ -745,6 +745,12 @@
             border-color: var(--accent);
         }
 
+        /* Make secondary action buttons in modal smaller */
+        .action-buttons .btn-secondary {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+        }
+
         /* Season/Episode Selector */
         .season-selector {
             margin-top: 1rem;
@@ -1837,9 +1843,10 @@
                     : (item.first_air_date ? item.first_air_date.substring(0, 4) : '');
                 div.innerHTML = `${title} (${year}) <span style="font-size: 0.8em; color: #aaa; margin-left: 5px;">${itemMode === 'tv' ? 'TV' : 'Movie'}</span>`;
                 div.addEventListener('click', () => {
-                    searchInput.value = title;
+                    // Instead of performing a new search, directly show the details.
                     hideSuggestions();
-                    handleSearch();
+                    currentMode = itemMode; // Set the correct mode (movie/tv)
+                    showDetails(item.id); // Open the details modal
                 });
                 suggestionsDiv.appendChild(div);
             });
@@ -1918,12 +1925,22 @@
             themeSwitch.addEventListener('change', toggleTheme);
 
             loadMoreBtn.addEventListener('click', loadMore);
-            closeModal.addEventListener('click', () => detailModal.style.display = 'none');
+            closeModal.addEventListener('click', () => {
+                detailModal.style.display = 'none';
+                // If we were in a search context, clear the input now.
+                // This triggers the input handler to reset the view.
+                if (searchInput.value.trim() !== '') {
+                    searchInput.value = '';
+                    handleSearchInput();
+                }
+            });
 
             // Close modals when clicking outside
             detailModal.addEventListener('click', (e) => {
                 if (e.target === detailModal) {
                     detailModal.style.display = 'none';
+                    searchInput.value = '';
+                    handleSearchInput();
                 }
             });
 
