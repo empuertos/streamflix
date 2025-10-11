@@ -244,3 +244,17 @@ body {
         flex-shrink: 0; /* Prevent buttons from shrinking */
     }
 }
+
+/* --- Ad Blocking Styles --- */
+/* Hide common ad-related elements */
+[class*="ad-"], [id*="ad-"],
+[class*="banner"], [id*="banner"],
+[class*="popup"], [id*="popup"],
+.advertisement, .ad-container, .ad-wrapper, .ad-overlay,
+iframe[src*="ads"], iframe[src*="ad."],
+div[style*="z-index: 9999"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+}
