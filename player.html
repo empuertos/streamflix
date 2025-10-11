@@ -66,31 +66,43 @@
     <script>
         // --- Security Check: Referrer Validation ---
         (function() {
-            const allowedReferrer = "streamflix-use.vercel.app";
+            const allowedHost = "streamflix-use.vercel.app";
             const referrer = document.referrer;
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get("token");
+            const validToken = sessionStorage.getItem("streamflix_access_token");
+
             let isAllowed = false;
 
+            // Always allow for local development
+            if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+                isAllowed = true;
+            }
+
+            // Validate referrer (if exists)
             if (referrer) {
                 try {
-                    const referrerUrl = new URL(referrer);
-                    if (referrerUrl.hostname === allowedReferrer) {
+                    const refUrl = new URL(referrer);
+                    if (refUrl.hostname === allowedHost) {
                         isAllowed = true;
                     }
-                } catch (e) {
-                    // Invalid referrer URL, treat as not allowed
-                    isAllowed = false;
+                } catch (err) {
+                    console.warn("Invalid referrer URL, will rely on token.");
                 }
             }
 
-            // Always allow for local development
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Token validation provides a more reliable check
+            if (token && validToken && token === validToken) {
                 isAllowed = true;
             }
 
             if (!isAllowed) {
-                document.body.innerHTML = `<div class="error" style="display: flex;"><h3>🚫 Access Denied</h3><p>This content can only be accessed from the main site.</p><a href="https://streamflix-use.vercel.app/" style="color: #00FF9D; text-decoration: none; margin-top: 1rem;">Go to StreamFlix</a></div>`;
-                throw new Error("Access denied due to invalid referrer: " + referrer);
+                document.body.innerHTML = `<div class="error" style="display: flex;"><h3>🚫 Access Denied</h3><p>This content can only be accessed from the main site.</p><a href="https://${allowedHost}/" style="color: #00FF9D; text-decoration: none; margin-top: 1rem;">Go to StreamFlix</a></div>`;
+                throw new Error("Access blocked — invalid referrer or token.");
             }
+
+            // Clean up the token from session storage after it has been used
+            sessionStorage.removeItem("streamflix_access_token");
         })();
 
         // Get movie parameters from URL
