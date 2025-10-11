@@ -449,6 +449,86 @@
             });
         }
 
+        function changeEpisode(newEpisode, clickedButton) {
+            if (mode !== 'tv' || !newEpisode || newEpisode < 1) return;
+
+            // Disable buttons and show loading state
+            prevEpisodeBtn.disabled = true;
+            nextEpisodeBtn.disabled = true;
+            if (clickedButton) {
+                clickedButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+            }
+
+            // Show the in-player loading overlay
+            episodeLoadingOverlay.style.display = 'flex';
+            cancelAutoplay(); // Stop any active autoplay countdown
+
+            // Update state and URL without reloading
+            episode = newEpisode;
+            urlParams.set('episode', episode);
+            history.pushState({ episode: episode }, '', `?${urlParams.toString()}`);
+
+            // Load the new episode content
+            loadMovie(currentProvider);
+        }
+
+        function restoreEpisodeButtons() {
+            prevEpisodeBtn.disabled = false;
+            nextEpisodeBtn.disabled = false;
+            prevEpisodeBtn.innerHTML = `<i class="fas fa-arrow-left"></i> Prev Episode`;
+            nextEpisodeBtn.innerHTML = `Next Episode <i class="fas fa-arrow-right"></i>`;
+        }
+
+        // Initialize player
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (movieId) {
+                await setupProviderButtons();
+                await fetchMovieDetails(); // Fetch details as soon as possible
+                loadMovie();
+            } else {
+                showError();
+            }
+
+            // Setup ad and pop-up blocking
+            setupAdBlocker();
+
+            // Setup PiP button
+            setupPipButton();
+
+            // Setup keyboard shortcuts
+            setupKeyboardShortcuts();
+
+            // Setup controls auto-hide
+            playerContainer.addEventListener('mousemove', showControls);
+            playerContainer.addEventListener('mouseleave', hideControlsImmediately);
+            showControls(); // Initial call to start the timer
+
+            refreshBtn.addEventListener('click', () => {
+                console.log('Refreshing player with current provider...');
+                loadMovie(currentProvider);
+            });
+
+            closePlayerBtn.addEventListener('click', () => window.close());
+
+            autoplayCancelBtn.addEventListener('click', cancelAutoplay);
+
+            if (mode === 'tv') {
+                prevEpisodeBtn.addEventListener('click', (e) => {
+                    const prevEpisode = parseInt(episode) - 1;
+                    changeEpisode(prevEpisode, e.currentTarget);
+                });
+                nextEpisodeBtn.addEventListener('click', (e) => {
+                    const nextEpisode = parseInt(episode) + 1;
+                    changeEpisode(nextEpisode, e.currentTarget);
+                });
+            }
+        });
+
+        // Handle iframe errors
+        movieFrame.addEventListener('error', () => {
+            console.error(`Iframe failed to load for provider: ${currentProvider}`);
+            handleLoadFailure(currentProvider);
+        });
     </script>
 </body>
 </html>
