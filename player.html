@@ -65,6 +65,9 @@
     </div>
 
     <script>
+        // This must be declared first so all subsequent scripts can use it.
+        const urlParams = new URLSearchParams(window.location.search);
+
         // --- Security Check: Referrer Validation ---
         (function() {
             const allowedHost = "streamflix-use.vercel.app";
@@ -106,7 +109,6 @@
         })();
 
         // Get movie parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
         const movieId = urlParams.get('id');
         let mode = urlParams.get('mode') || 'movie';
         let season = urlParams.get('season') || '1';
