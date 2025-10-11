@@ -522,11 +522,6 @@
             }
         });
 
-        // Handle iframe errors
-        movieFrame.addEventListener('error', () => {
-            console.error(`Iframe failed to load for provider: ${currentProvider}`);
-            handleLoadFailure(currentProvider);
-        });
     </script>
 </body>
 </html>
