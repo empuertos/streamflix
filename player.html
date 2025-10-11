@@ -107,7 +107,6 @@
         })();
 
         // Get movie parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
         const movieId = urlParams.get('id');
         let mode = urlParams.get('mode') || 'movie';
         let season = urlParams.get('season') || '1';
