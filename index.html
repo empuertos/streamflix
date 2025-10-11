@@ -2465,7 +2465,7 @@
             if (!movieItem) return;
 
             // Open the external link directly in a new tab
-            const externalUrl = `https://streamflix-use.vercel.app/player?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}`;
+            const externalUrl = `https://streamflix-use.vercel.app/player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}`;
             const newWindow = window.open(externalUrl, '_blank');
 
             if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
