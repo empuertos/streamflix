@@ -132,6 +132,7 @@ body {
 }
 
 .refresh-btn,
+.fullscreen-btn,
 .prev-episode-btn,
 .next-episode-btn {
     border: none;
@@ -151,6 +152,12 @@ body {
     margin-left: 10px;
 }
 
+.fullscreen-btn {
+    background: rgba(140, 100, 255, 0.8);
+    color: #fff;
+    margin-left: 10px;
+}
+
 .prev-episode-btn {
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
@@ -164,11 +171,13 @@ body {
 }
 
 .refresh-btn:hover,
+.fullscreen-btn:hover,
 .prev-episode-btn:hover,
 .next-episode-btn:hover {
     transform: translateY(-2px);
 }
 .refresh-btn:disabled,
+.fullscreen-btn:disabled,
 .prev-episode-btn:disabled,
 .next-episode-btn:disabled {
     cursor: not-allowed;
