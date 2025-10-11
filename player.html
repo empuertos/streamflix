@@ -69,7 +69,6 @@
         (function() {
             const allowedHost = "streamflix-use.vercel.app";
             const referrer = document.referrer;
-            const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get("token");
             const validToken = sessionStorage.getItem("streamflix_access_token");
 
@@ -107,6 +106,7 @@
         })();
 
         // Get movie parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
         const movieId = urlParams.get('id');
         let mode = urlParams.get('mode') || 'movie';
         let season = urlParams.get('season') || '1';
