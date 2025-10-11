@@ -745,9 +745,10 @@
             border-color: var(--accent);
         }
 
-        /* Make secondary action buttons in modal smaller */
-        .action-buttons .btn-secondary {
-            padding: 0.6rem 1.2rem;
+        /* Make secondary action buttons in modal smaller. Use !important to ensure override. */
+        .action-buttons .favorite-btn,
+        .action-buttons .share-btn {
+            padding: 0.6rem 1.2rem !important;
             font-size: 0.9rem;
         }
 
