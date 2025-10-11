@@ -1825,6 +1825,7 @@
         let heroMovies = [];
         let currentHeroIndex = 0;
         let heroInterval;
+        let deferredPrompt;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -1921,15 +1922,6 @@
         function hideSuggestions() {
             document.getElementById('searchSuggestions').style.display = 'none';
         }
-
-        // Install prompt
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if (isMobile()) {
-                showInstallModal();
-            }
-        });
 
         // Set up event listeners
         function setupEventListeners() {
@@ -2774,6 +2766,15 @@
 
         // --- App Initialization ---
 
+            // Install prompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                if (isMobile() && window.STREAMFLIX_CONFIG.FEATURES.ENABLE_PWA) {
+                    showInstallModal();
+                }
+            });
+
             const urlParams = new URLSearchParams(window.location.search);
             const shareId = urlParams.get('id');
             const shareMode = urlParams.get('mode');
@@ -2795,7 +2796,7 @@
             displayWatchHistory();
 
             // Register service worker
-            if ('serviceWorker' in navigator && CONFIG.FEATURES.ENABLE_PWA) {
+            if ('serviceWorker' in navigator && window.STREAMFLIX_CONFIG && window.STREAMFLIX_CONFIG.FEATURES.ENABLE_PWA) {
                 navigator.serviceWorker.register('/worker.js')
                     .then(reg => console.log('Service Worker registered successfully.'))
                     .catch(err => console.error('Service Worker registration failed:', err));
