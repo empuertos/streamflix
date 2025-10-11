@@ -162,6 +162,14 @@
                     playerContainer.style.display = 'block';
                 };
 
+                // Fallback to show the player UI even if onload doesn't fire,
+                // allowing the timeout logic to handle provider switching.
+                setTimeout(() => {
+                    if (loadingDiv.style.display === 'flex') {
+                        playerContainer.style.display = 'block';
+                    }
+                }, 3000); // Show player UI after 3 seconds regardless
+
                 // Set a timeout to handle cases where onload doesn't fire (e.g., blocked content)
                 loadTimeout = setTimeout(() => handleLoadFailure(provider), LOAD_TIMEOUT_DURATION);
 
@@ -329,7 +337,6 @@
             console.error(`Iframe failed to load for provider: ${currentProvider}`);
             handleLoadFailure(currentProvider);
         });
-        setupActivityListeners();
     </script>
 </body>
 </html>
