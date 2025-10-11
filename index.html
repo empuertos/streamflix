@@ -1825,10 +1825,6 @@
         let currentEpisode = 1;
         let latestGrid = null;
         let tvSeasons = [];
-        let heroMovies = [];
-        let currentHeroIndex = 0;
-        let deferredPrompt;
-        let activeElementBeforeModal;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -1925,34 +1921,6 @@
         function hideSuggestions() {
             document.getElementById('searchSuggestions').style.display = 'none';
         }
-
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const shareId = urlParams.get('id');
-            const shareMode = urlParams.get('mode');
-
-            if (shareId && shareMode) {
-                // If a shared link is opened, show the specific item
-                currentMode = shareMode;
-                showDetails(shareId);
-            } else {
-                // Otherwise, load the default content
-                fetchContent();
-                fetchLatest();
-            }
-
-            setupEventListeners();
-            fetchHeroMovies();
-            applyInitialTheme();
-            displayFavorites();
-            displayWatchHistory();
-
-            // Register service worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('../worker.js');
-            }
-        });
 
         // Install prompt
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -2669,37 +2637,6 @@
             }
         }
 
-        // Play video in modal
-        function playVideo(item, season = 1, episode = 1) {
-            if (item) currentItem = item;
-            currentSeason = season;
-            currentEpisode = episode;
-            openPlayerInNewTab();
-        }
-
-        function openExternalPlayer(item) {
-            // Use the selected item or current item
-            const movieItem = item || currentItem;
-            if (!movieItem) return;
-
-            // Generate a simple random token for security
-            const token = Math.random().toString(36).substring(2);
-            // Store it in session storage so the player page can verify it
-            sessionStorage.setItem('streamflix_access_token', token);
-
-            // Open the external link directly in a new tab
-            const externalUrl = `https://streamflix-use.vercel.app/player.html?id=${movieItem.id}&mode=${currentMode}&season=${currentSeason}&episode=${currentEpisode}&token=${token}`;
-            const newWindow = window.open(externalUrl, '_blank', 'noopener,noreferrer');
-
-            if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                sessionStorage.removeItem('streamflix_access_token'); // Clean up if popup fails
-                alert('Please allow popups for this site to watch content.');
-                return;
-            }
-
-            updateWatchHistory();
-        }
-
         // Fetch hero movies for slideshow
         async function fetchHeroMovies() {
             try {
@@ -2707,7 +2644,7 @@
                 const data = await response.json();
                 heroMovies = data.results.slice(0, 5);
                 updateHero();
-                setInterval(() => {
+                heroInterval = setInterval(() => {
                     currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
                     updateHero();
                 }, 5000);
@@ -2814,6 +2751,36 @@
             });
             observer.observe(grid, { childList: true });
         }
+
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareId = urlParams.get('id');
+            const shareMode = urlParams.get('mode');
+
+            if (shareId && shareMode) {
+                // If a shared link is opened, show the specific item
+                currentMode = shareMode;
+                showDetails(shareId);
+            } else {
+                // Otherwise, load the default content
+                fetchContent();
+                fetchLatest();
+            }
+
+            setupEventListeners();
+            fetchHeroMovies();
+            applyInitialTheme();
+            displayFavorites();
+            displayWatchHistory();
+
+            // Register service worker
+            if ('serviceWorker' in navigator && CONFIG.FEATURES.ENABLE_PWA) {
+                navigator.serviceWorker.register('/worker.js')
+                    .then(reg => console.log('Service Worker registered successfully.'))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            }
+        });
 
     </script>
 </body>
