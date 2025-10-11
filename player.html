@@ -5,152 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Player - StreamFlix</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            font-size: 1.2rem;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .loading-spinner {
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 5px solid #00FF9D;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            font-size: 1.2rem;
-            color: #ff6b6b;
-            text-align: center;
-            padding: 2rem;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .player-container {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-        }
-
-        .movie-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #000;
-        }
-
-        .controls {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            right: 1rem;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1rem;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            z-index: 10;
-        }
-
-        .movie-title {
-            color: #00FF9D;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .provider-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .provider-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 0.4rem 0.8rem;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .provider-btn:hover,
-        .provider-btn.active {
-            background: #00FF9D;
-            color: #000;
-            border-color: #00FF9D;
-        }
-
-        .back-btn {
-            background: rgba(255, 46, 99, 0.8);
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: #ff1a4f;
-            transform: translateY(-2px);
-        }
-
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .controls {
-                padding: 0.5rem;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .movie-title {
-                font-size: 0.9rem;
-                text-align: center;
-            }
-
-            .provider-btn {
-                padding: 0.3rem 0.6rem;
-                font-size: 0.7rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="player.css">
 </head>
 <body>
     <div id="loading" class="loading">
@@ -170,6 +26,12 @@
                 <button class="back-btn" onclick="window.history.back()">
                     <i class="fas fa-arrow-left"></i> Back to Movies
                 </button>
+                <button class="prev-episode-btn" id="prevEpisodeBtn" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Prev Episode
+                </button>
+                <button class="next-episode-btn" id="nextEpisodeBtn" style="display: none;">
+                    Next Episode <i class="fas fa-arrow-right"></i>
+                </button>
             </div>
             <div class="movie-info">
                 <span class="movie-title" id="movieTitle">Loading...</span>
@@ -179,6 +41,15 @@
             </div>
         </div>
         <iframe id="movieFrame" class="movie-iframe" allowfullscreen allow="autoplay"></iframe>
+
+        <!-- Autoplay Overlay -->
+        <div id="autoplayOverlay" class="autoplay-overlay">
+            <div class="autoplay-countdown">
+                <p>Next episode in</p>
+                <span id="autoplayCountdown">15</span>
+            </div>
+            <button id="autoplayCancelBtn" class="autoplay-cancel-btn">Cancel</button>
+        </div>
     </div>
 
     <script>
@@ -190,13 +61,28 @@
         const episode = urlParams.get('episode') || '1';
 
         const movieFrame = document.getElementById('movieFrame');
+        const movieIframe = document.getElementById('movieFrame'); // Alias for clarity
         const loadingDiv = document.getElementById('loading');
         const errorDiv = document.getElementById('error');
         const playerContainer = document.getElementById('playerContainer');
         const movieTitle = document.getElementById('movieTitle');
         const providerButtonsContainer = document.getElementById('providerButtons');
+        const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
+        const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
+        const autoplayOverlay = document.getElementById('autoplayOverlay');
+        const autoplayCountdown = document.getElementById('autoplayCountdown');
+        const autoplayCancelBtn = document.getElementById('autoplayCancelBtn');
+        let autoplayTimer, countdownInterval;
 
-        let currentProvider = 'vidora.su';
+        let currentProvider = localStorage.getItem('streamflixLastProvider') || 'vidora.su';
+        const providerKeys = Object.keys(providers);
+        let currentProviderIndex = providerKeys.indexOf(currentProvider);
+        let loadTimeout;
+        const LOAD_TIMEOUT_DURATION = 10000; // 10 seconds
+        const loadingMessage = document.querySelector('#loading p');
+
+        // The worker URL for proxying TMDB API requests
+        const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
 
         // Available streaming providers
         const providers = {
@@ -248,30 +134,36 @@
             }
 
             try {
-                loadingDiv.style.display = 'block';
+                loadingDiv.style.display = 'flex';
                 errorDiv.style.display = 'none';
                 playerContainer.style.display = 'none';
+                loadingMessage.textContent = `Loading from ${providers[provider]}...`;
 
+                // Update active button
+                updateActiveProviderButton(provider);
+                
                 // Fetch movie details
                 await fetchMovieDetails();
 
                 const streamUrl = generateStreamUrl(provider, movieId, mode, season, episode);
-                console.log('Loading movie from:', streamUrl);
+                console.log(`Loading movie from provider '${provider}':`, streamUrl);
 
-                // Load the external worker in an iframe
-                movieFrame.src = `https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/?id=${movieId}&mode=${mode}&season=${season}&episode=${episode}`;
+                movieIframe.src = streamUrl;
+                
+                // Clear previous timeout if any
+                if (loadTimeout) clearTimeout(loadTimeout);
 
                 // Show player after iframe loads
-                movieFrame.onload = function() {
+                movieIframe.onload = function() {
+                    console.log(`Provider '${provider}' loaded successfully.`);
+                    localStorage.setItem('streamflixLastProvider', provider); // Save the successful provider
+                    clearTimeout(loadTimeout); // Cancel the timeout
                     loadingDiv.style.display = 'none';
                     playerContainer.style.display = 'block';
                 };
 
-                // Fallback timeout
-                setTimeout(() => {
-                    loadingDiv.style.display = 'none';
-                    playerContainer.style.display = 'block';
-                }, 5000);
+                // Set a timeout to handle cases where onload doesn't fire (e.g., blocked content)
+                loadTimeout = setTimeout(() => handleLoadFailure(provider), LOAD_TIMEOUT_DURATION);
 
             } catch (error) {
                 console.error('Error loading movie:', error);
@@ -279,9 +171,29 @@
             }
         }
 
+        function handleLoadFailure(failedProvider) {
+            console.warn(`Provider '${failedProvider}' failed to load or timed out.`);
+            currentProviderIndex++;
+
+            if (currentProviderIndex < providerKeys.length) {
+                const nextProvider = providerKeys[currentProviderIndex];
+                console.log(`Trying next provider: '${nextProvider}'`);
+                currentProvider = nextProvider;
+                loadMovie(nextProvider);
+            } else {
+                console.error("All providers failed to load.");
+                showError();
+            }
+        }
+
+        function updateActiveProviderButton(provider) {
+            document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.provider-btn[data-provider="${provider}"]`)?.classList.add('active');
+        }
+
         async function fetchMovieDetails() {
             try {
-                const response = await fetch(`https://api.themoviedb.org/3/${mode}/${movieId}?api_key=d2d7e10b8b8e5e9c8e8e5e9c8e8e5e9c`);
+                const response = await fetch(`${API_URL}/${mode}/${movieId}`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -293,6 +205,15 @@
                     movieTitle.textContent = mode === 'movie'
                         ? `${title}${year ? ` (${year})` : ''}`
                         : `${title}${year ? ` (${year})` : ''} - S${season}E${episode}`;
+
+                    if (mode === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
+                        setupAutoplayTimer(data.episode_run_time[0]);
+                    }
+
+                    if (mode === 'tv') {
+                        nextEpisodeBtn.style.display = 'inline-flex';
+                        if (parseInt(episode) > 1) prevEpisodeBtn.style.display = 'inline-flex';
+                    }
                 } else {
                     movieTitle.textContent = mode === 'movie'
                         ? `Movie: ${movieId}`
@@ -320,15 +241,51 @@
 
             providerButtonsContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('provider-btn')) {
-                    document.querySelectorAll('.provider-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
                     currentProvider = e.target.dataset.provider;
+                    localStorage.setItem('streamflixLastProvider', currentProvider); // Save the manually selected provider
+                    currentProviderIndex = providerKeys.indexOf(currentProvider);
 
-                    // Reload iframe with new provider
-                    const streamUrl = generateStreamUrl(currentProvider, movieId, mode, season, episode);
-                    movieFrame.src = `https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/?id=${movieId}&mode=${mode}&season=${season}&episode=${episode}`;
+                    // Manually selected, so start the loading process for this provider
+                    // Re-call loadMovie to show loading spinner and handle the change
+                    loadMovie(currentProvider);
                 }
             });
+        }
+
+        function setupAutoplayTimer(runtimeInMinutes) {
+            if (!runtimeInMinutes || runtimeInMinutes <= 2) return;
+
+            // Trigger the overlay 90 seconds before the end, or at 85% if the episode is short
+            const runtimeInSeconds = runtimeInMinutes * 60;
+            const triggerDelay = runtimeInSeconds > 300 ? runtimeInSeconds - 90 : runtimeInSeconds * 0.85;
+
+            console.log(`Autoplay overlay will trigger in ${Math.round(triggerDelay / 60)} minutes.`);
+
+            clearTimeout(autoplayTimer);
+            autoplayTimer = setTimeout(showAutoplayOverlay, triggerDelay * 1000);
+        }
+
+        function showAutoplayOverlay() {
+            autoplayOverlay.classList.add('visible');
+            let countdown = 15;
+            autoplayCountdown.textContent = countdown;
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                countdown--;
+                autoplayCountdown.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    nextEpisodeBtn.click();
+                }
+            }, 1000);
+        }
+
+        function cancelAutoplay() {
+            clearTimeout(autoplayTimer);
+            clearInterval(countdownInterval);
+            autoplayOverlay.classList.remove('visible');
+            console.log("Autoplay cancelled by user.");
         }
 
         // Initialize player
@@ -339,13 +296,40 @@
             } else {
                 showError();
             }
+
+            autoplayCancelBtn.addEventListener('click', cancelAutoplay);
+
+            if (mode === 'tv') {
+                prevEpisodeBtn.addEventListener('click', () => {
+                    const prevEpisode = parseInt(episode) - 1;
+                    if (prevEpisode > 0) {
+                        // Show loading state
+                        prevEpisodeBtn.disabled = true;
+                        nextEpisodeBtn.disabled = true;
+                        prevEpisodeBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+
+                        urlParams.set('episode', prevEpisode);
+                        window.location.search = urlParams.toString();
+                    }
+                });
+                nextEpisodeBtn.addEventListener('click', () => {
+                    // Show loading state
+                    prevEpisodeBtn.disabled = true;
+                    nextEpisodeBtn.disabled = true;
+                    nextEpisodeBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+
+                    urlParams.set('episode', parseInt(episode) + 1);
+                    window.location.search = urlParams.toString();
+                });
+            }
         });
 
         // Handle iframe errors
         movieFrame.addEventListener('error', () => {
-            console.error('Iframe failed to load');
-            showError();
+            console.error(`Iframe failed to load for provider: ${currentProvider}`);
+            handleLoadFailure(currentProvider);
         });
+        setupActivityListeners();
     </script>
 </body>
 </html>
