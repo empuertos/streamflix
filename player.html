@@ -40,6 +40,7 @@
                 </button>
             </div>
             <div class="movie-info">
+                <img src="" alt="Poster" id="moviePoster" class="movie-poster-small">
                 <span class="movie-title" id="movieTitle">Loading...</span>
             </div>
             <div class="provider-buttons" id="providerButtons">
@@ -118,6 +119,7 @@
         const errorDiv = document.getElementById('error');
         const playerContainer = document.getElementById('playerContainer');
         const movieTitle = document.getElementById('movieTitle');
+        const moviePoster = document.getElementById('moviePoster');
         const providerButtonsContainer = document.getElementById('providerButtons');
         const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
         const refreshBtn = document.getElementById('refreshBtn');
@@ -236,6 +238,9 @@
                         ? (data.release_date ? data.release_date.substring(0, 4) : '')
                         : (data.first_air_date ? data.first_air_date.substring(0, 4) : '');
 
+                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w92${data.poster_path}` : '';
+                    moviePoster.src = posterPath;
+                    moviePoster.style.display = posterPath ? 'block' : 'none';
                     movieTitle.textContent = mode === 'movie'
                         ? `${title}${year ? ` (${year})` : ''}`
                         : `${title}${year ? ` (${year})` : ''} - S${season}E${episode}`;
