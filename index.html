@@ -1929,7 +1929,6 @@
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const heroSkeleton = document.getElementById('heroSkeleton');
             const shareId = urlParams.get('id');
             const shareMode = urlParams.get('mode');
 
@@ -1943,8 +1942,6 @@
                 fetchLatest();
             }
 
-            heroSkeleton.style.display = 'block';
-            document.getElementById('heroContent').classList.add('hidden');
             setupEventListeners();
             fetchHeroMovies();
             applyInitialTheme();
@@ -2456,7 +2453,7 @@
 
                 // Show load more button if there are more pages
                 if (data.page < data.total_pages) {
-                    loadMoreBtn.style.display = 'block';
+                    loadMoreBtn.style.display = 'inline-block';
                 }
             } catch (error) {
                 console.error('Error fetching content:', error);
@@ -2727,6 +2724,7 @@
             document.querySelector('.hero').style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdropUrl}')`;
             document.getElementById('heroTitle').textContent = movie.title;
             document.getElementById('heroDesc').textContent = movie.overview || 'No description available.';
+            document.querySelector('.hero-content').classList.remove('hidden');
         }
 
         // Check if device is mobile
