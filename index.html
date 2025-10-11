@@ -1619,6 +1619,12 @@
             <!-- Content will be loaded here -->
         </div>
 
+        <h2 class="section-title"><i class="fas fa-calendar-alt" aria-hidden="true"></i> Latest Releases</h2>
+        <div class="content-grid" id="latestGrid">
+            <!-- Latest content will be loaded here -->
+        </div>
+
+
         <div class="loading" id="loading">
             <div class="loading-spinner"></div>
             <p>Loading content...</p>
@@ -1746,6 +1752,7 @@
         let currentItem = null;
         let currentSeason = 1;
         let currentEpisode = 1;
+        let latestGrid = null;
         let tvSeasons = [];
         let heroMovies = [];
         let currentHeroIndex = 0;
@@ -1753,6 +1760,7 @@
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
+        latestGrid = document.getElementById('latestGrid');
         const loadingElement = document.getElementById('loading');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -1807,12 +1815,10 @@
 
         async function fetchSuggestions(query) {
             try {
-                const endpoint = currentMode === 'movie'
-                    ? `${API_URL}/search/movie?query=${query}&page=1`
-                    : `${API_URL}/search/tv?query=${query}&page=1`;
+                const endpoint = `${API_URL}/search/multi?query=${query}&page=1`;
                 const response = await fetch(endpoint);
                 const data = await response.json();
-                displaySuggestions(data.results.slice(0, 10));
+                displaySuggestions(data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv').slice(0, 10));
             } catch (error) {
                 console.error('Error fetching suggestions:', error);
             }
@@ -1827,12 +1833,13 @@
             }
             items.forEach(item => {
                 const div = document.createElement('div');
+                const itemMode = item.media_type;
                 div.className = 'search-suggestion-item';
-                const title = currentMode === 'movie' ? item.title : item.name;
-                const year = currentMode === 'movie'
+                const title = itemMode === 'movie' ? item.title : item.name;
+                const year = itemMode === 'movie'
                     ? (item.release_date ? item.release_date.substring(0, 4) : '')
                     : (item.first_air_date ? item.first_air_date.substring(0, 4) : '');
-                div.textContent = `${title} (${year})`;
+                div.innerHTML = `${title} (${year}) <span style="font-size: 0.8em; color: #aaa; margin-left: 5px;">${itemMode === 'tv' ? 'TV' : 'Movie'}</span>`;
                 div.addEventListener('click', () => {
                     searchInput.value = title;
                     hideSuggestions();
@@ -1860,6 +1867,7 @@
             } else {
                 // Otherwise, load the default content
                 fetchContent();
+                fetchLatest();
             }
 
             setupEventListeners();
@@ -2204,6 +2212,7 @@
             });
 
             fetchContent();
+            fetchLatest();
         }
 
         // Switch genre filter
@@ -2253,9 +2262,8 @@
                         displaySkeletons();
                     }
 
-                    endpoint = currentMode === 'movie'
-                        ? `${API_URL}/search/movie?query=${currentQuery}&${baseParams}`
-                        : `${API_URL}/search/tv?query=${currentQuery}&${baseParams}`;
+                    // Use multi-search to find both movies and TV shows
+                    endpoint = `${API_URL}/search/multi?query=${currentQuery}&page=${currentPage}`;
                 } else {
                     if (currentGenre) {
                         // Discover endpoint with genre filter
@@ -2294,6 +2302,28 @@
             }
         }
 
+        // Fetch latest content
+        async function fetchLatest() {
+            try {
+                const endpoint = currentMode === 'movie'
+                    ? `${API_URL}/movie/now_playing?page=1`
+                    : `${API_URL}/tv/airing_today?page=1`;
+
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                if (data.results) {
+                    displayContent(data.results.slice(0, 10), latestGrid);
+                }
+
+            } catch (error) {
+                console.error('Error fetching latest content:', error);
+                if (latestGrid) {
+                    latestGrid.innerHTML = '<p>Error loading latest releases.</p>';
+                }
+            }
+        }
+
         // Display content in the grid
         function displayContent(items, gridElement = contentGrid, isHistory = false) {
             if (items.length === 0) {
@@ -2323,7 +2353,8 @@
         function createContentCard(item, index) {
             const card = document.createElement('div');
             card.className = 'content-card';
-            const itemMode = item.mode || currentMode; // Use item's mode if available (from history)
+            // For multi-search, TMDB provides 'media_type'. Fallback to currentMode.
+            const itemMode = item.media_type || item.mode || currentMode;
             const title = itemMode === 'movie' ? item.title : item.name;
             const date = itemMode === 'movie' ? item.release_date : item.first_air_date;
             const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
@@ -2343,7 +2374,7 @@
             `;
             
             card.addEventListener('click', (e) => {
-                // Set mode before showing details, especially for history items
+                // Set mode before showing details, especially for history/search items
                 currentMode = itemMode;
                 showDetails(item.id);
             });
@@ -2359,12 +2390,15 @@
 
         // Show details in modal
         async function showDetails(itemId) {
+            // The itemMode is set by the card click handler.
+            // We use `currentMode` which now reflects the actual type of the item clicked.
             try {
                 const endpoint = `${API_URL}/${currentMode}/${itemId}?append_to_response=credits,external_ids`;
                 const response = await fetch(endpoint);
                 if (!response.ok) throw new Error('Failed to fetch details.');
                 const item = await response.json();
 
+                // Set the global currentItem for use in other functions like favorites
                 currentItem = item;
 
                 const title = currentMode === 'movie' ? item.title : item.name;
