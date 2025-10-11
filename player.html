@@ -22,9 +22,12 @@
 
     <div id="playerContainer" class="player-container" style="display: none;">
         <div class="controls">
-            <div>
+            <div class="player-actions">
                 <button class="back-btn" onclick="window.history.back()">
                     <i class="fas fa-arrow-left"></i> Back to Movies
+                </button>
+                <button class="refresh-btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
                 </button>
                 <button class="prev-episode-btn" id="prevEpisodeBtn" style="display: none;">
                     <i class="fas fa-arrow-left"></i> Prev Episode
@@ -97,6 +100,7 @@
         const movieTitle = document.getElementById('movieTitle');
         const providerButtonsContainer = document.getElementById('providerButtons');
         const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
         const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
         const autoplayOverlay = document.getElementById('autoplayOverlay');
         const autoplayCountdown = document.getElementById('autoplayCountdown');
@@ -348,6 +352,11 @@
 
             // Setup ad and pop-up blocking
             setupAdBlocker();
+
+            refreshBtn.addEventListener('click', () => {
+                console.log('Refreshing player with current provider...');
+                loadMovie(currentProvider);
+            });
 
             autoplayCancelBtn.addEventListener('click', cancelAutoplay);
 
