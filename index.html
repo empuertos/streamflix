@@ -1806,6 +1806,7 @@
 
     <script src="config.js"></script>
     <script>
+    document.addEventListener('DOMContentLoaded', () => {
         // Configuration
         const IMG_URL = 'https://image.tmdb.org/t/p/w500';
         const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
@@ -2772,7 +2773,7 @@
         }
 
         // --- App Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
+
             const urlParams = new URLSearchParams(window.location.search);
             const shareId = urlParams.get('id');
             const shareMode = urlParams.get('mode');
@@ -2799,7 +2800,7 @@
                     .then(reg => console.log('Service Worker registered successfully.'))
                     .catch(err => console.error('Service Worker registration failed:', err));
             }
-        });
+    });
 
     </script>
 </body>
