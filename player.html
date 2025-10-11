@@ -29,8 +29,8 @@
                 <button class="refresh-btn" id="refreshBtn">
                     <i class="fas fa-sync-alt"></i> Refresh
                 </button>
-                <button class="fullscreen-btn" id="fullscreenBtn">
-                    <i class="fas fa-expand"></i> Fullscreen
+                <button class="close-player-btn" id="closePlayerBtn">
+                    <i class="fas fa-times"></i> Close Player
                 </button>
                 <button class="prev-episode-btn" id="prevEpisodeBtn" style="display: none;">
                     <i class="fas fa-arrow-left"></i> Prev Episode
@@ -104,7 +104,7 @@
         const providerButtonsContainer = document.getElementById('providerButtons');
         const prevEpisodeBtn = document.getElementById('prevEpisodeBtn');
         const refreshBtn = document.getElementById('refreshBtn');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const closePlayerBtn = document.getElementById('closePlayerBtn');
         const nextEpisodeBtn = document.getElementById('nextEpisodeBtn');
         const autoplayOverlay = document.getElementById('autoplayOverlay');
         const autoplayCountdown = document.getElementById('autoplayCountdown');
@@ -362,10 +362,7 @@
                 loadMovie(currentProvider);
             });
 
-            fullscreenBtn.addEventListener('click', () => {
-                const playerElement = document.getElementById('playerContainer');
-                toggleFullScreen(playerElement);
-            });
+            closePlayerBtn.addEventListener('click', () => window.close());
 
             autoplayCancelBtn.addEventListener('click', cancelAutoplay);
 
