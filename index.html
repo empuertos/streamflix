@@ -2124,6 +2124,32 @@
             displayFavorites();
         }
 
+        function handleShare() {
+            if (!currentItem) return;
+
+            const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentItem.id}&mode=${currentMode}`;
+            const title = currentMode === 'movie' ? currentItem.title : currentItem.name;
+            const text = `Check out ${title} on StreamFlix!`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: shareUrl,
+                })
+                .then(() => console.log('Successful share'))
+                .catch((error) => console.log('Error sharing', error));
+            } else {
+                // Fallback for browsers that don't support the Web Share API
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Could not copy link. Please copy it manually.');
+                });
+            }
+        }
+
         function updateFavoriteButton() {
             if (isFavorite(currentItem.id)) {
                 favoriteBtn.classList.add('active');
