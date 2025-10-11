@@ -177,6 +177,43 @@
             z-index: 2;
         }
 
+        .hero-content.hidden {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        /* Skeleton for Hero Section */
+        .hero-skeleton {
+            max-width: 600px;
+            z-index: 1;
+        }
+
+        .skeleton-hero-title,
+        .skeleton-hero-desc,
+        .skeleton-hero-btn {
+            background-color: #2a2a4a;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-hero-title::after,
+        .skeleton-hero-desc::after,
+        .skeleton-hero-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-hero-title { height: 3rem; width: 80%; margin-bottom: 1rem; }
+        .skeleton-hero-desc { height: 1.2rem; width: 100%; margin-bottom: 0.7rem; }
+        .skeleton-hero-desc.short { width: 70%; }
+        .skeleton-hero-btns { display: flex; gap: 1rem; margin-top: 2rem; }
+        .skeleton-hero-btn { height: 46px; width: 150px; border-radius: 30px; }
+
         .hero h2 {
             font-size: 3rem;
             margin-bottom: 1rem;
@@ -1892,6 +1929,7 @@
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
+            const heroSkeleton = document.getElementById('heroSkeleton');
             const shareId = urlParams.get('id');
             const shareMode = urlParams.get('mode');
 
@@ -1905,6 +1943,8 @@
                 fetchLatest();
             }
 
+            heroSkeleton.style.display = 'block';
+            document.getElementById('heroContent').classList.add('hidden');
             setupEventListeners();
             fetchHeroMovies();
             applyInitialTheme();
