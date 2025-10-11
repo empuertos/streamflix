@@ -40,7 +40,7 @@
                 <!-- Provider buttons will be loaded here -->
             </div>
         </div>
-        <iframe id="movieFrame" class="movie-iframe" allowfullscreen allow="autoplay"></iframe>
+        <iframe id="movieFrame" class="movie-iframe" allowfullscreen allow="autoplay" sandbox="allow-forms allow-scripts allow-same-origin allow-pointer-lock allow-presentation"></iframe>
 
         <!-- Autoplay Overlay -->
         <div id="autoplayOverlay" class="autoplay-overlay">
@@ -299,6 +299,44 @@
             console.log("Autoplay cancelled by user.");
         }
 
+        function setupAdBlocker() {
+            // 1. Block pop-ups by overriding window.open
+            const originalWindowOpen = window.open;
+            window.open = function (url, name, specs) {
+                // You can add more sophisticated logic here to allow certain pop-ups if needed
+                console.log('Blocked a pop-up attempt to:', url);
+                // Returning null prevents the new window from opening
+                return null;
+            };
+
+            // 2. Use MutationObserver to remove ad elements as they are added to the DOM
+            const adSelectors = [
+                '[class*="ad-"]', '[id*="ad-"]',
+                '[class*="banner"]', '[id*="banner"]',
+                '[class*="popup"]', '[id*="popup"]',
+                '.advertisement', '.ad-container', '.ad-wrapper', '.ad-overlay',
+                'iframe[src*="ads"]', 'iframe[src*="ad."]',
+                'div[style*="z-index: 9999"]'
+            ];
+
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // ELEMENT_NODE
+                            adSelectors.forEach(selector => {
+                                if (node.matches(selector)) {
+                                    console.log('Ad element removed:', node);
+                                    node.remove();
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+
         // Initialize player
         document.addEventListener('DOMContentLoaded', async () => {
             if (movieId) {
@@ -307,6 +345,9 @@
             } else {
                 showError();
             }
+
+            // Setup ad and pop-up blocking
+            setupAdBlocker();
 
             autoplayCancelBtn.addEventListener('click', cancelAutoplay);
 
