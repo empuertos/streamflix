@@ -227,7 +227,8 @@
 
         async function fetchMovieDetails() {
             try {
-                const response = await fetch(`${API_URL}/${mode}/${movieId}`);
+                // Append necessary details to the API call
+                const response = await fetch(`${API_URL}/${mode}/${movieId}?append_to_response=credits,videos`);
                 const data = await response.json();
 
                 if (response.ok) {
