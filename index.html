@@ -1807,8 +1807,8 @@
     <script src="config.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Configuration from config.js
-        const { API_URLS, IMG_URL } = window.STREAMFLIX_CONFIG;
+        // Configuration from config.js, de-structured for easy access
+        const { API_URLS, IMG_URL, IMG_URL_W780, IMG_URL_ORIGINAL } = window.STREAMFLIX_CONFIG;
         const API_URL = API_URLS[0]; // Use the primary API URL
 
         // State variables
@@ -2572,7 +2572,7 @@
 
                 const title = currentMode === 'movie' ? item.title : item.name;
                 const date = currentMode === 'movie' ? item.release_date : item.first_air_date;
-                const posterPath = item.poster_path ? `https://image.tmdb.org/t/p/w780${item.poster_path}` : 'https://via.placeholder.com/780x1170/1a1a2e/00FF9D?text=No+Image';
+                const posterPath = item.poster_path ? `${IMG_URL_W780}${item.poster_path}` : 'https://via.placeholder.com/780x1170/1a1a2e/00FF9D?text=No+Image';
 
                 modalTitle.textContent = title;
                 modalPoster.src = posterPath;
@@ -2697,7 +2697,7 @@
         function updateHero() {
             if (heroMovies.length === 0) return;
             const movie = heroMovies[currentHeroIndex];
-            const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : 'https://via.placeholder.com/1920x1080/1a1a2e/00FF9D?text=No+Image';
+            const backdropUrl = movie.backdrop_path ? `${IMG_URL_ORIGINAL}${movie.backdrop_path}` : 'https://via.placeholder.com/1920x1080/1a1a2e/00FF9D?text=No+Image';
             document.querySelector('.hero').style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdropUrl}')`;
             document.getElementById('heroTitle').textContent = movie.title;
             document.getElementById('heroDesc').textContent = movie.overview || 'No description available.';

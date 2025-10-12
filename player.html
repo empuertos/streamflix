@@ -64,6 +64,7 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         // This must be declared first so all subsequent scripts can use it.
         const urlParams = new URLSearchParams(window.location.search);
@@ -142,7 +143,7 @@
         const loadingMessage = document.querySelector('#loading p');
 
         // The worker URL for proxying TMDB API requests
-        const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
+        const API_URL = window.STREAMFLIX_CONFIG.API_URLS[0];
 
         async function loadMovie(provider = currentProvider) {
             if (!movieId) {
@@ -235,7 +236,7 @@
                         ? (data.release_date ? data.release_date.substring(0, 4) : '')
                         : (data.first_air_date ? data.first_air_date.substring(0, 4) : '');
 
-                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w92${data.poster_path}` : '';
+                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w154${data.poster_path}` : '';
                     moviePoster.src = posterPath;
                     moviePoster.style.display = posterPath ? 'block' : 'none';
                     movieTitle.textContent = mode === 'movie'
