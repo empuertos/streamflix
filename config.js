@@ -29,7 +29,12 @@ const CONFIG = {
         ENABLE_GENRE_FILTER: true,
         ENABLE_FAVORITES: true,
         ENABLE_WATCH_HISTORY: true
-    }
+    },
+
+    // Maintenance mode
+    MAINTENANCE_MODE: false, // Set to true to enable maintenance mode
+    MAINTENANCE_MESSAGE: "We're currently performing some scheduled maintenance to improve your experience. StreamFlix will be back online shortly.",
+    MAINTENANCE_ESTIMATED_TIME: "Soon"
 };
 
 // Get the best available API URL

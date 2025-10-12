@@ -128,14 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.genreButtons.addEventListener('click', handleGenreClick);
 
         dom.settingsBtn.addEventListener('click', () => openModal(dom.settingsModal));
-        dom.closeSettingsModal.addEventListener('click', () => closeModal(dom.settingsModal));
+        dom.closeSettingsModal.addEventListener('click', () => closeModalWindow(dom.settingsModal));
 
         dom.themeSwitch.addEventListener('change', toggleTheme);
 
         dom.loadMoreBtn.addEventListener('click', loadMore);
-        dom.closeModalBtn.addEventListener('click', () => closeModal(dom.detailModal));
+        dom.closeModalBtn.addEventListener('click', () => closeModalWindow(dom.detailModal));
 
-        dom.closeTrailerModal.addEventListener('click', () => closeModal(dom.trailerModal));
+        dom.closeTrailerModal.addEventListener('click', () => closeModalWindow(dom.trailerModal));
 
         dom.watchBtn.addEventListener('click', () => {
             updateWatchHistory();
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalElement.addEventListener('click', handleModalClick);
     }
 
-    function closeModal(modalElement) {
+    function closeModalWindow(modalElement) {
         if (modalElement.id === 'trailerModal') {
             dom.trailerPlayer.innerHTML = '';
         }
@@ -788,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!openModalElement) return;
 
         if (event.key === 'Escape') {
-            closeModal(openModalElement);
+            closeModalWindow(openModalElement);
         }
 
         if (event.key === 'Tab') {

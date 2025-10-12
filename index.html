@@ -1805,6 +1805,18 @@
     </div>
 
     <script src="config.js"></script>
+    <script>
+        // Maintenance mode check
+        (function() {
+            const { MAINTENANCE_MODE } = window.STREAMFLIX_CONFIG;
+            const urlParams = new URLSearchParams(window.location.search);
+            const maintenanceOverride = urlParams.get('maintenance') === 'off';
+
+            if (MAINTENANCE_MODE && !maintenanceOverride) {
+                window.location.href = 'maintenance.html';
+            }
+        })();
+    </script>
     <script src="main.js"></script>
 </body>
 </html>

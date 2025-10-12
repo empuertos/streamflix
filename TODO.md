@@ -1,6 +1,13 @@
-# TODO: Fix Movie Poster Images
+# Maintenance Mode Implementation TODO
 
-## Tasks
-- [x] Update poster path handling in main.js to support full URLs and add onerror fallback
-- [ ] Update poster path handling in player.js to support full URLs and add onerror fallback
-- [ ] Test image loading on the application
+## Completed Tasks
+- [x] Create professional maintenance.html page with responsive design
+- [x] Add MAINTENANCE_MODE flag and related settings to config.js
+- [x] Implement maintenance mode redirect logic in index.html with admin bypass
+- [x] Update estimated time to "Soon" for flexibility
+
+## Followup Steps
+- [ ] Test maintenance mode by setting MAINTENANCE_MODE to true in config.js
+- [ ] Test admin bypass by visiting index.html?maintenance=off
+- [ ] Deploy and verify on live site (e.g., Vercel)
+- [ ] Update maintenance message and estimated time as needed
