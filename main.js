@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tvModeBtn: document.getElementById('tvMode'),
         loadMoreBtn: document.getElementById('loadMore'),
         detailModal: document.getElementById('detailModal'),
-        closeModal: document.getElementById('closeModal'),
+        closeModalBtn: document.getElementById('closeModal'),
         modalTitle: document.getElementById('modalTitle'),
         modalPoster: document.getElementById('modalPoster'),
         modalDate: document.getElementById('modalDate'),
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.themeSwitch.addEventListener('change', toggleTheme);
 
         dom.loadMoreBtn.addEventListener('click', loadMore);
-        dom.closeModal.addEventListener('click', () => closeModal(dom.detailModal));
+        dom.closeModalBtn.addEventListener('click', () => closeModal(dom.detailModal));
 
         dom.closeTrailerModal.addEventListener('click', () => closeModal(dom.trailerModal));
 
