@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const CONFIG = {
         LOAD_TIMEOUT_DURATION: 10000, // 10 seconds
         API_URL: window.STREAMFLIX_CONFIG.API_URLS[0],
+        TMDB_API_KEY: window.STREAMFLIX_CONFIG.TMDB_API_KEY,
     };
 
     // --- DOM Elements ---

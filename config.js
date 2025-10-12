@@ -8,6 +8,9 @@ const CONFIG = {
         // 'http://localhost:8787'  // For local development
     ],
 
+    // TMDB API Key for direct access (fallback if worker fails)
+    TMDB_API_KEY: 'your_tmdb_api_key_here', // Replace with your actual TMDB API key
+
     // TMDB Image URLs
     IMG_URL: 'https://image.tmdb.org/t/p/w500',
     IMG_URL_ORIGINAL: 'https://image.tmdb.org/t/p/original',

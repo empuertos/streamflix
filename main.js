@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration from config.js, de-structured for easy access
-    const { API_URLS, IMG_URL, IMG_URL_W780, IMG_URL_ORIGINAL, HERO_SLIDESHOW_INTERVAL, FEATURES } = window.STREAMFLIX_CONFIG;
+    const { API_URLS, IMG_URL, IMG_URL_W780, IMG_URL_ORIGINAL, HERO_SLIDESHOW_INTERVAL, FEATURES, TMDB_API_KEY } = window.STREAMFLIX_CONFIG;
     const API_URL = API_URLS[0]; // Use the primary API URL
 
     // Application State
