@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateHero() {
         if (state.heroMovies.length === 0) return;
         const movie = state.heroMovies[state.currentHeroIndex];
-        const backdropUrl = movie.backdrop_path ? `${IMG_URL_ORIGINAL}${movie.backdrop_path}` : 'https://via.placeholder.com/1920x1080/1a1a2e/00FF9D?text=No+Image';
+        const backdropUrl = movie.backdrop_path ? (movie.backdrop_path.startsWith('http') ? movie.backdrop_path : `${IMG_URL_ORIGINAL}${movie.backdrop_path}`) : 'https://via.placeholder.com/1920x1080/1a1a2e/00FF9D?text=No+Image';
         dom.hero.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdropUrl}')`;
         dom.heroTitle.textContent = movie.title;
         dom.heroDesc.textContent = movie.overview || 'No description available.';
