@@ -20,6 +20,7 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    '*' // Allow all origins for deployment readiness
 ];
 
 // Centralized provider configuration
@@ -83,20 +84,20 @@ async function handleStream(url, corsHeaders) {
       const mode = query.get('mode');
       const season = query.get('season');
       const episode = query.get('episode');
-  
+
       if (!provider || !id || !mode) {
           return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
               status: 400,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
       }
-  
+
       const streamUrl = generateStreamUrl(provider, id, mode, season, episode);
       return new Response(JSON.stringify({ url: streamUrl }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
   }
-  
+
 /**
  * Proxies a request to the TMDB API, injecting the API key.
  * @param {URL} url - The request URL object.
@@ -109,20 +110,20 @@ async function handleTmdbProxy(url, env, corsHeaders) {
           return new Response(JSON.stringify({ error: 'TMDB_API_KEY not configured in worker secrets' }), { status: 500 });
       }
       query.set('api_key', env.TMDB_API_KEY);
-  
+
       const tmdbUrl = `https://api.themoviedb.org/3${url.pathname}?${query}`;
-  
+
       const response = await fetch(tmdbUrl);
       const newResponse = new Response(response.body, response);
-  
+
       // Add CORS headers to the proxied response
       Object.entries(corsHeaders).forEach(([key, value]) => {
           newResponse.headers.set(key, value);
       });
-  
+
       return newResponse;
   }
-  
+
   export default {
       async fetch(request, env, ctx) {
           const requestOrigin = request.headers.get('Origin');
@@ -131,9 +132,14 @@ async function handleTmdbProxy(url, env, corsHeaders) {
           // Dynamically set CORS origin based on the request
           if (requestOrigin) {
               const originUrl = new URL(requestOrigin);
-              if (ALLOWED_ORIGINS.includes(originUrl.origin) || ALLOWED_ORIGINS.includes(originUrl.hostname)) {
+              if (ALLOWED_ORIGINS.includes(originUrl.origin) || ALLOWED_ORIGINS.includes(originUrl.hostname) || ALLOWED_ORIGINS.includes('*')) {
                   corsOrigin = requestOrigin;
               }
+          }
+
+          // Allow all origins if '*' is in ALLOWED_ORIGINS
+          if (ALLOWED_ORIGINS.includes('*')) {
+              corsOrigin = '*';
           }
 
           const corsHeaders = {
@@ -146,22 +152,22 @@ async function handleTmdbProxy(url, env, corsHeaders) {
           if (request.method === 'OPTIONS') {
               return new Response(null, { headers: corsHeaders });
           }
-  
+
           const url = new URL(request.url);
           const path = url.pathname;
-  
+
           if (path.startsWith('/providers')) {
               return handleProviders(corsHeaders);
           }
-  
+
           if (path.startsWith('/stream')) {
               return handleStream(url, corsHeaders);
           }
-  
+
           if (path.startsWith('/movie/') || path.startsWith('/tv/') || path.startsWith('/search/') || path.startsWith('/discover/')) {
               return handleTmdbProxy(url, env, corsHeaders);
           }
-  
+
           return new Response(JSON.stringify({ error: 'Route not found' }), {
               status: 404,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
