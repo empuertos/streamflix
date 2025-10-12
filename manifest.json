@@ -10,12 +10,26 @@
     {
       "src": "https://via.placeholder.com/192x192/00FF9D/000?text=SF",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "https://via.placeholder.com/512x512/00FF9D/000?text=SF",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://via.placeholder.com/192x192/00FF9D/000?text=SF",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/00FF9D/000?text=SF",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

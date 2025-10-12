@@ -1822,10 +1822,10 @@
         let currentEpisode = 1;
         let latestGrid = null;
         let tvSeasons = [];
+        let activeElementBeforeModal;
         let heroMovies = [];
         let currentHeroIndex = 0;
         let heroInterval;
-        let deferredPrompt;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -1866,6 +1866,27 @@
         const settingsModal = document.getElementById('settingsModal');
         const closeSettingsModal = document.getElementById('closeSettingsModal');
         const themeSwitch = document.getElementById('themeSwitch');
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (isMobile() && window.STREAMFLIX_CONFIG.FEATURES.ENABLE_PWA) {
+                // Optionally, show a custom install button/banner
+                console.log('`beforeinstallprompt` event was fired.');
+            }
+        });
+
+        // Genres Data
+        const genres = [
+            { id: "", name: "All" }, { id: 28, name: "Action" }, { id: 12, name: "Adventure" },
+            { id: 16, name: "Animation" }, { id: 35, name: "Comedy" }, { id: 80, name: "Crime" },
+            { id: 99, name: "Documentary" }, { id: 18, name: "Drama" }, { id: 10751, name: "Family" },
+            { id: 14, name: "Fantasy" }, { id: 36, name: "History" }, { id: 27, name: "Horror" },
+            { id: 10402, name: "Music" }, { id: 9648, name: "Mystery" }, { id: 10749, name: "Romance" },
+            { id: 878, name: "Science Fiction" }, { id: 10770, name: "TV Movie" }, { id: 53, name: "Thriller" },
+            { id: 10752, name: "War" }, { id: 37, name: "Western" }];
 
         // Search suggestions
         function handleSearchInput() {
@@ -1936,10 +1957,7 @@
             tvModeBtn.addEventListener('click', () => switchMode('tv'));
 
             // Genre filter event listeners
-            const genreButtons = document.querySelectorAll('.genre-btn');
-            genreButtons.forEach(btn => {
-                btn.addEventListener('click', () => switchGenre(btn.dataset.genre));
-            });
+            document.getElementById('genreButtons').addEventListener('click', handleGenreClick);
 
             // Settings Modal
             settingsBtn.addEventListener('click', () => openModal(settingsModal));
@@ -1949,30 +1967,15 @@
             themeSwitch.addEventListener('change', toggleTheme);
 
             loadMoreBtn.addEventListener('click', loadMore);
-            closeModal.addEventListener('click', (e) => {
-                closeModal(detailModal);
-                // If we were in a search context, clear the input now.
-                // This triggers the input handler to reset the view.
-                if (searchInput.value.trim() !== '') {
-                    e.stopPropagation(); // Prevent outer modal click listener from firing
-                    searchInput.value = '';
-                    handleSearchInput();
-                }
-            });
-
-            // Close modals when clicking outside
-            detailModal.addEventListener('click', (e) => {
-                if (e.target === detailModal) closeModal(detailModal);
-            });
+            closeModal.addEventListener('click', () => closeModal(detailModal));
 
             // Trailer Modal listeners
-            trailerModal.addEventListener('click', (e) => {
-                if (e.target === trailerModal) closeModal(trailerModal);
-            });
             closeTrailerModal.addEventListener('click', () => closeModal(trailerModal));
 
             // Watch button in modal
             watchBtn.addEventListener('click', () => {
+                // Add to history immediately on click for better UX
+                updateWatchHistory();
                 // Open the external link directly in a new tab to load the movie player
                 openExternalPlayer();
             });
@@ -2051,6 +2054,15 @@
             localStorage.setItem('streamflixTheme', newTheme);
         }
 
+        // --- Genre Functions ---
+        function populateGenreButtons() {
+            const container = document.getElementById('genreButtons');
+            container.innerHTML = genres.map(genre =>
+                `<button class="genre-btn ${genre.id === '' ? 'active' : ''}" data-genre="${genre.id}">${genre.name}</button>`
+            ).join('');
+        }
+
+
         // --- Accessible Modal Functions ---
 
         function openModal(modalElement) {
@@ -2082,12 +2094,6 @@
             modalElement.removeEventListener('click', handleModalClick);
         }
 
-        function handleModalClick(event) {
-            if (event.target.classList.contains('modal')) {
-                closeModal(event.target);
-            }
-        }
-
         function handleModalKeydown(event) {
             const openModalElement = document.querySelector('.modal[style*="display: block"]');
             if (!openModalElement) return;
@@ -2113,6 +2119,19 @@
             }
         }
 
+        function handleModalClick(event) {
+            if (event.target.classList.contains('modal')) {
+                closeModal(event.target);
+            }
+        }
+
+        function handleCloseDetailModal() {
+            closeModal(detailModal);
+            if (currentQuery) {
+                searchInput.value = '';
+                handleSearchInput();
+            }
+        }
         function openExternalPlayer(item) {
             // Use the selected item or current item
             const movieItem = item || currentItem;
@@ -2356,6 +2375,14 @@
             fetchContent();
             fetchLatest();
         }
+
+        function handleGenreClick(e) {
+            if (e.target.classList.contains('genre-btn')) {
+                const genreId = e.target.dataset.genre;
+                switchGenre(genreId);
+            }
+        }
+
 
         // Switch genre filter
         function switchGenre(genre) {
@@ -2765,16 +2792,6 @@
         }
 
         // --- App Initialization ---
-
-            // Install prompt
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                if (isMobile() && window.STREAMFLIX_CONFIG.FEATURES.ENABLE_PWA) {
-                    showInstallModal();
-                }
-            });
-
             const urlParams = new URLSearchParams(window.location.search);
             const shareId = urlParams.get('id');
             const shareMode = urlParams.get('mode');
@@ -2789,6 +2806,7 @@
                 fetchLatest();
             }
 
+            populateGenreButtons();
             setupEventListeners();
             fetchHeroMovies();
             applyInitialTheme();

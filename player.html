@@ -104,8 +104,6 @@
                 throw new Error("Access blocked — invalid referrer or token.");
             }
 
-            // Clean up the token from session storage after it has been used
-            sessionStorage.removeItem("streamflix_access_token");
         })();
 
         // Get movie parameters from URL
@@ -115,7 +113,7 @@
         let episode = urlParams.get('episode') || '1';
 
         const movieFrame = document.getElementById('movieFrame');
-        const movieIframe = document.getElementById('movieFrame'); // Alias for clarity
+        const movieIframe = movieFrame; // Alias for clarity
         const loadingDiv = document.getElementById('loading');
         const errorDiv = document.getElementById('error');
         const playerContainer = document.getElementById('playerContainer');
@@ -167,7 +165,7 @@
                 const data = await response.json();
                 const streamUrl = data.url;
 
-                if (!streamUrl) throw new Error(`Could not get stream URL for provider ${provider}`);
+                if (!streamUrl) throw new Error(`Could not get stream URL for provider '${provider}'`);
 
                 console.log(`Loading movie from provider '${provider}':`, streamUrl);
                 movieIframe.src = streamUrl; // Set iframe source to the URL from the worker
@@ -530,6 +528,11 @@
             console.error(`Iframe failed to load for provider: ${currentProvider}`);
             handleLoadFailure(currentProvider);
         });
+    </script>
+    <script>
+        // Clean up the token from session storage after it has been used for validation.
+        // This runs after the validation script to ensure the token is available for the check.
+        sessionStorage.removeItem("streamflix_access_token");
     </script>
 </body>
 </html>
