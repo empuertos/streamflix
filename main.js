@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.style.animationDelay = `${index * 50}ms`;
 
         card.innerHTML = `
-            <img src="${posterPath}" alt="${title}" class="card-img" loading="lazy" decoding="async" width="220" height="330">
+            <img src="${posterPath}" alt="${title}" class="card-img" loading="lazy" decoding="async" width="220" height="330" onerror="this.src='https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image'">
             <div class="card-content">
                 <h3 class="card-title" title="${title}">${title}</h3>
                 <div class="card-info">
