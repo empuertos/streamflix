@@ -213,8 +213,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ? (data.release_date ? data.release_date.substring(0, 4) : '')
                     : (data.first_air_date ? data.first_air_date.substring(0, 4) : '');
 
-                const posterPath = data.poster_path ? (data.poster_path.startsWith('http') ? data.poster_path : `${window.STREAMFLIX_CONFIG.IMG_URL}${data.poster_path}`) : '';
+                const posterPath = data.poster_path ? (data.poster_path.startsWith('http') ? data.poster_path : `${window.STREAMFLIX_CONFIG.IMG_URL}${data.poster_path}`) : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
                 dom.moviePoster.src = posterPath;
+                dom.moviePoster.onerror = () => {
+                    dom.moviePoster.src = 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
+                };
                 dom.moviePoster.style.display = posterPath ? 'block' : 'none';
                 dom.movieTitle.textContent = state.mode === 'movie'
                     ? `${title}${year ? ` (${year})` : ''}`
