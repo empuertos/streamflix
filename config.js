@@ -9,7 +9,7 @@ const CONFIG = {
     ],
 
     // TMDB API Key for direct access (fallback if worker fails)
-    TMDB_API_KEY: 'your_tmdb_api_key_here', // Replace with your actual TMDB API key
+    TMDB_API_KEY: process.env.TMDB_API_KEY || 'your_tmdb_api_key_here', // Uses Vercel env var or fallback
 
     // TMDB Image URLs
     IMG_URL: 'https://image.tmdb.org/t/p/w500',
