@@ -18,6 +18,8 @@ const ALLOWED_ORIGINS = [
     'https://streamflix-use.vercel.app', // Your production frontend
     'http://localhost',
     'http://127.0.0.1',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
 ];
 
 // Centralized provider configuration
