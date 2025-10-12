@@ -236,7 +236,7 @@
                         ? (data.release_date ? data.release_date.substring(0, 4) : '')
                         : (data.first_air_date ? data.first_air_date.substring(0, 4) : '');
 
-                    const posterPath = data.poster_path ? `https://image.tmdb.org/t/p/w154${data.poster_path}` : '';
+                    const posterPath = data.poster_path ? `${window.STREAMFLIX_CONFIG.IMG_URL}${data.poster_path}` : '';
                     moviePoster.src = posterPath;
                     moviePoster.style.display = posterPath ? 'block' : 'none';
                     movieTitle.textContent = mode === 'movie'
