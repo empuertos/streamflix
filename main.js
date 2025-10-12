@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const { API_URLS, IMG_URL, IMG_URL_W780, IMG_URL_ORIGINAL, HERO_SLIDESHOW_INTERVAL, FEATURES, TMDB_API_KEY } = window.STREAMFLIX_CONFIG;
     const API_URL = API_URLS[0]; // Use the primary API URL
 
+    // API key is now handled securely by the Cloudflare Worker
+    const API_KEY_PARAM = '';
+
     // Application State
     const state = {
         currentPage: 1,
@@ -206,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchSuggestions(query) {
         try {
-            const endpoint = `${API_URL}/search/multi?query=${encodeURIComponent(query)}&page=1`;
+            const endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(query)}&page=1`;
             const response = await fetch(endpoint);
             const data = await response.json();
             displaySuggestions(data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv').slice(0, 10));
@@ -307,11 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (state.currentQuery) {
                 if (state.currentPage === 1) displaySkeletons();
-                endpoint = `${API_URL}/search/multi?query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}`;
+                endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}`;
             } else {
                 if (state.currentPage === 1) displaySkeletons();
                 const discoverOrPopular = state.currentGenre ? 'discover' : 'popular';
-                endpoint = `${API_URL}/${state.currentMode === 'movie' ? 'movie' : 'tv'}/${discoverOrPopular}?${baseParams}`;
+                endpoint = `${API_URL}/${state.currentMode === 'movie' ? 'movie' : 'tv'}/${discoverOrPopular}${API_KEY_PARAM}&${baseParams}`;
             }
 
             const response = await fetch(endpoint);
@@ -337,8 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchLatest() {
         try {
             const endpoint = state.currentMode === 'movie'
-                ? `${API_URL}/movie/now_playing?page=1`
-                : `${API_URL}/tv/airing_today?page=1`;
+                ? `${API_URL}/movie/now_playing${API_KEY_PARAM}&page=1`
+                : `${API_URL}/tv/airing_today${API_KEY_PARAM}&page=1`;
 
             const response = await fetch(endpoint);
             const data = await response.json();
@@ -414,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Detail Modal ---
     async function showDetails(itemId) {
         try {
-            const endpoint = `${API_URL}/${state.currentMode}/${itemId}?append_to_response=credits,external_ids,videos`;
+            const endpoint = `${API_URL}/${state.currentMode}/${itemId}${API_KEY_PARAM}&append_to_response=credits,external_ids,videos`;
             const response = await fetch(endpoint);
             if (!response.ok) throw new Error('Failed to fetch details.');
             const item = await response.json();
@@ -556,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Hero Section ---
     async function fetchHeroMovies() {
         try {
-            const response = await fetch(`${API_URL}/movie/popular?page=1`);
+            const response = await fetch(`${API_URL}/movie/popular${API_KEY_PARAM}&page=1`);
             const data = await response.json();
             state.heroMovies = data.results.slice(0, 5);
             updateHero();

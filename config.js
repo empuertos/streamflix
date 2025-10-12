@@ -1,6 +1,6 @@
 // Configuration for StreamFlix application
 const CONFIG = {
-    // Primary API endpoint - fallback to local proxy if needed
+    // Primary API endpoint - always use Cloudflare Worker for security
     API_URLS: [
         'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev',
         // Add alternative endpoints here as fallbacks
