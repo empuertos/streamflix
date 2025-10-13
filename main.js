@@ -366,20 +366,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchLatest() {
         try {
-            const endpoint = state.currentMode === 'movie'
-                ? `${API_URL}/movie/now_playing${API_KEY_PARAM}&page=1`
-                : `${API_URL}/tv/airing_today${API_KEY_PARAM}&page=1`;
+            await retryWithBackoff(async () => {
+                const endpoint = state.currentMode === 'movie'
+                    ? `${API_URL}/movie/now_playing${API_KEY_PARAM}&page=1`
+                    : `${API_URL}/tv/airing_today${API_KEY_PARAM}&page=1`;
 
-            const response = await fetch(endpoint);
-            const data = await response.json();
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
 
-            if (data.results) {
-                displayContent(data.results.slice(0, 10), dom.latestGrid);
-            }
+                if (data.results) {
+                    displayContent(data.results.slice(0, 10), dom.latestGrid);
+                }
+            });
         } catch (error) {
             console.error('Error fetching latest content:', error);
             if (dom.latestGrid) {
-                dom.latestGrid.innerHTML = '<p>Error loading latest releases.</p>';
+                dom.latestGrid.innerHTML = '<p>Error loading latest releases. Please check your internet connection and try again in a few minutes.</p>';
             }
         }
     }
@@ -444,22 +447,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Detail Modal ---
     async function showDetails(itemId) {
         try {
-            const endpoint = `${API_URL}/${state.currentMode}/${itemId}${API_KEY_PARAM}&append_to_response=credits,external_ids,videos`;
-            const response = await fetch(endpoint);
-            if (!response.ok) throw new Error('Failed to fetch details.');
-            const item = await response.json();
+            await retryWithBackoff(async () => {
+                const endpoint = `${API_URL}/${state.currentMode}/${itemId}${API_KEY_PARAM}&append_to_response=credits,external_ids,videos`;
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const item = await response.json();
 
-            state.currentItem = item;
+                state.currentItem = item;
 
-            updateModalUI(item);
-            renderCast(item.credits?.cast || []);
-            setupTrailerButton(item.videos?.results || []);
+                updateModalUI(item);
+                renderCast(item.credits?.cast || []);
+                setupTrailerButton(item.videos?.results || []);
 
-            openModal(dom.detailModal);
-            updateFavoriteButton();
+                openModal(dom.detailModal);
+                updateFavoriteButton();
+            });
         } catch (error) {
             console.error('Error showing details:', error);
-            alert('Could not load details for this item. Please try again.');
+            alert('Could not load details for this item. Please check your internet connection and try again in a few minutes.');
         }
     }
 
@@ -586,14 +591,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Hero Section ---
     async function fetchHeroMovies() {
         try {
-            const response = await fetch(`${API_URL}/movie/popular${API_KEY_PARAM}&page=1`);
-            const data = await response.json();
-            state.heroMovies = data.results.slice(0, 5);
-            updateHero();
-            heroInterval = setInterval(() => {
-                state.currentHeroIndex = (state.currentHeroIndex + 1) % state.heroMovies.length;
+            await retryWithBackoff(async () => {
+                const response = await fetch(`${API_URL}/movie/popular${API_KEY_PARAM}&page=1`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                state.heroMovies = data.results.slice(0, 5);
                 updateHero();
-            }, HERO_SLIDESHOW_INTERVAL);
+                heroInterval = setInterval(() => {
+                    state.currentHeroIndex = (state.currentHeroIndex + 1) % state.heroMovies.length;
+                    updateHero();
+                }, HERO_SLIDESHOW_INTERVAL);
+            });
         } catch (error) {
             console.error('Error fetching hero movies:', error);
         }
