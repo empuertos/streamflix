@@ -8,6 +8,14 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+/**
+ * StreamFlix TMDB API Proxy Worker
+ * Proxies requests to TMDB API with embedded API key
+ */
+
+// TMDB API Key
+const TMDB_API_KEY = '3c93497653c0dc5b73a72ffb43516f95';
+
 export default {
   async fetch(request, env, ctx) {
     // Handle CORS
@@ -29,7 +37,7 @@ export default {
       const tmdbUrl = `https://api.themoviedb.org/3/${tmdbPath}${url.search}`;
 
       try {
-        const response = await fetch(`${tmdbUrl}&api_key=${env.TMDB_API_KEY}`, {
+        const response = await fetch(`${tmdbUrl}&api_key=${TMDB_API_KEY}`, {
           method: request.method,
           headers: {
             'Content-Type': 'application/json',

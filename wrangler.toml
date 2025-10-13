@@ -6,6 +6,3 @@ compatibility_date = "2024-01-01"
 binding = "streamflix_db"
 database_name = "streamflix-db"
 database_id = "9e556dc0-446e-4bf6-8cb0-cb13bc0ca8a4"
-
-[vars]
-TMDB_API_KEY = "your_tmdb_api_key_here"
