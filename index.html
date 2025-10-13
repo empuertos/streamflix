@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix - Watch Movies & TV Shows</title>
+    <meta name="description" content="Stream movies and TV shows for free with StreamFlix. Search, browse popular content, and enjoy high-quality streaming.">
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="logo">StreamFlix</h1>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search movies, TV shows..." autocomplete="off">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+            <button id="installBtn" class="install-btn" style="display: none;">
+                <i class="fas fa-download"></i> Install App
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section id="popularSection" class="popular-section">
+            <h2>Popular Movies</h2>
+            <div id="popularGrid" class="movie-grid">
+                <!-- Popular movies will be loaded here -->
+            </div>
+            <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+        </section>
+
+        <section id="searchResults" class="search-results" style="display: none;">
+            <h2>Search Results</h2>
+            <div id="resultsGrid" class="movie-grid">
+                <!-- Search results will be loaded here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Movie Details Modal -->
+    <div id="movieModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="movie-details">
+                <div class="movie-poster">
+                    <img id="modalPoster" src="" alt="Movie Poster">
+                </div>
+                <div class="movie-info">
+                    <h2 id="modalTitle">Movie Title</h2>
+                    <div class="movie-meta">
+                        <span id="modalYear"></span>
+                        <span id="modalGenres"></span>
+                        <span id="modalRating"><i class="fas fa-star"></i> <span id="ratingValue"></span></span>
+                    </div>
+                    <div class="movie-details-grid">
+                        <div><strong>Release Date:</strong> <span id="modalReleaseDate"></span></div>
+                        <div><strong>Language:</strong> <span id="modalLanguage"></span></div>
+                        <div><strong>Director:</strong> <span id="modalDirector"></span></div>
+                    </div>
+                    <p id="modalOverview" class="overview"></p>
+                    <div class="trailer-section">
+                        <h3>Trailer</h3>
+                        <iframe id="trailerFrame" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="watchNowBtn" class="watch-btn">
+                            <i class="fas fa-play"></i> Watch Now
+                        </button>
+                        <button id="favoriteBtn" class="favorite-btn">
+                            <i class="far fa-heart"></i> Add to Favorites
+                        </button>
+                        <button id="shareBtn" class="share-btn">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
