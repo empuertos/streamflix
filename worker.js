@@ -1,7 +1,7 @@
 // StreamFlix Cloudflare Worker
 // This worker handles API requests and hides sensitive information
 
-const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZiIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.eyJhdWQiOiJmZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZjQ4ZjY4ZiIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0'; // Hidden TMDB API Key
+const TMDB_API_KEY = '3c93497653c0dc5b73a72ffb43516f95'; // Hidden TMDB API Key
 
 const PROVIDER_CONFIGS = {
     'vidora.su': {
