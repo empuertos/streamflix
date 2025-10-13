@@ -74,6 +74,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let heroInterval;
     let deferredPrompt;
 
+    // --- Retry Utility ---
+    async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return await fn();
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    throw error;
+                }
+                const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000; // Exponential backoff with jitter
+                console.warn(`Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
     // --- Genres Data ---
     const genres = [
         { id: "", name: "All" }, { id: 28, name: "Action" }, { id: 12, name: "Adventure" },
@@ -209,10 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchSuggestions(query) {
         try {
-            const endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(query)}&page=1`;
-            const response = await fetch(endpoint);
-            const data = await response.json();
-            displaySuggestions(data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv').slice(0, 10));
+            await retryWithBackoff(async () => {
+                const endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(query)}&page=1`;
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                displaySuggestions(data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv').slice(0, 10));
+            });
         } catch (error) {
             console.error('Error fetching suggestions:', error);
         }
@@ -331,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching content:', error);
-            dom.contentGrid.innerHTML = '<p>Error loading content. Please try again later.</p>';
+            dom.contentGrid.innerHTML = '<p>Error loading content. Please check your internet connection and try again in a few minutes.</p>';
         } finally {
             state.isFetching = false;
         }

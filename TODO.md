@@ -1,13 +1,17 @@
-# Maintenance Mode Implementation TODO
+# Implement Automatic Retry Logic and Improve Error Messages
 
 ## Completed Tasks
-- [x] Create professional maintenance.html page with responsive design
-- [x] Add MAINTENANCE_MODE flag and related settings to config.js
-- [x] Implement maintenance mode redirect logic in index.html with admin bypass
-- [x] Update estimated time to "Soon" for flexibility
+- [x] Create plan for implementing retry logic and improving error messages
+
+## Pending Tasks
+- [ ] Add retry utility function with exponential backoff to main.js
+- [ ] Update fetchContent function to use retry logic
+- [ ] Update fetchLatest function to use retry logic
+- [ ] Update showDetails function to use retry logic
+- [ ] Update fetchSuggestions function to use retry logic
+- [ ] Update fetchHeroMovies function to use retry logic
+- [ ] Improve error messages in all catch blocks to be more informative (suggest checking internet or trying later)
 
 ## Followup Steps
-- [x] Test maintenance mode by setting MAINTENANCE_MODE to true in config.js
-- [x] Test admin bypass by visiting index.html?maintenance=off
-- [ ] Deploy and verify on live site (e.g., Vercel)
-- [ ] Update maintenance message and estimated time as needed
+- [ ] Test the retry logic by simulating network failures
+- [ ] Verify improved error messages display correctly
