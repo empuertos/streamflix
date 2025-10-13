@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL = API_URLS[0]; // Use the primary API URL
 
     // API key is now handled securely by the Cloudflare Worker
-    const API_KEY_PARAM = '';
+    const API_KEY_PARAM = ''; // No longer needed as worker handles it
 
     // Application State
     const state = {

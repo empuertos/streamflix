@@ -2,10 +2,10 @@
 const CONFIG = {
     // Primary API endpoint - always use Cloudflare Worker for security
     API_URLS: [
-        'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev',
+        'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/api/tmdb',
         // Add alternative endpoints here as fallbacks
-        // 'https://your-backup-api.workers.dev',
-        // 'http://localhost:8787'  // For local development
+        // 'https://your-backup-api.workers.dev/api/tmdb',
+        // 'http://localhost:8787/api/tmdb'  // For local development
     ],
 
     // TMDB API Key for direct access (fallback if worker fails)
