@@ -12,9 +12,9 @@ const CONFIG = {
     TMDB_API_KEY: 'your_tmdb_api_key_here', // Fallback API key
 
     // TMDB Image URLs
-    IMG_URL: 'https://image.tmdb.org/t/p/w500',
-    IMG_URL_ORIGINAL: 'https://image.tmdb.org/t/p/original',
-    IMG_URL_W780: 'https://image.tmdb.org/t/p/w780',
+    IMG_URL: 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/t/p/w500',
+    IMG_URL_ORIGINAL: 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/t/p/original',
+    IMG_URL_W780: 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/t/p/w780',
 
     // App settings
     APP_NAME: 'StreamFlix',

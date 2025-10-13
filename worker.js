@@ -124,6 +124,25 @@ async function handleTmdbProxy(url, env, corsHeaders) {
       return newResponse;
   }
 
+/**
+ * Proxies TMDB image requests to avoid CORS issues.
+ * @param {URL} url - The request URL object.
+ * @param {Headers} corsHeaders - The CORS headers to apply to the response.
+ */
+async function handleImageProxy(url, corsHeaders) {
+    const imageUrl = `https://image.tmdb.org${url.pathname}`;
+
+    const response = await fetch(imageUrl);
+    const newResponse = new Response(response.body, response);
+
+    // Add CORS headers to the proxied image response
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+        newResponse.headers.set(key, value);
+    });
+
+    return newResponse;
+}
+
   export default {
       async fetch(request, env, ctx) {
           const requestOrigin = request.headers.get('Origin');
@@ -166,6 +185,11 @@ async function handleTmdbProxy(url, env, corsHeaders) {
 
           if (path.startsWith('/movie/') || path.startsWith('/tv/') || path.startsWith('/search/') || path.startsWith('/discover/')) {
               return handleTmdbProxy(url, env, corsHeaders);
+          }
+
+          // Handle TMDB image proxying
+          if (path.startsWith('/t/p/')) {
+              return handleImageProxy(url, corsHeaders);
           }
 
           return new Response(JSON.stringify({ error: 'Route not found' }), {
