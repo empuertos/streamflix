@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration
     const CONFIG = {
-        API_URL: 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/',
+        API_URL: 'https://streamflix-api.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev/',
         IMG_BASE_URL: 'https://image.tmdb.org/t/p/',
         ITEMS_PER_PAGE: 20,
         SITE_URL: 'https://streamflix-use.vercel.app'
