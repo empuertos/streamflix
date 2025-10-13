@@ -324,33 +324,41 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.loadMoreBtn.style.display = 'none';
 
         try {
-            let endpoint;
-            const baseParams = `page=${state.currentPage}${state.currentGenre ? `&with_genres=${state.currentGenre}` : ''}`;
+            await retryWithBackoff(async () => {
+                let endpoint;
+                const baseParams = `page=${state.currentPage}${state.currentGenre ? `&with_genres=${state.currentGenre}` : ''}`;
 
-            if (state.currentQuery) {
-                if (state.currentPage === 1) displaySkeletons();
-                endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}`;
-            } else {
-                if (state.currentPage === 1) displaySkeletons();
-                const discoverOrPopular = state.currentGenre ? 'discover' : 'popular';
-                endpoint = `${API_URL}/${state.currentMode === 'movie' ? 'movie' : 'tv'}/${discoverOrPopular}${API_KEY_PARAM}&${baseParams}`;
-            }
+                if (state.currentQuery) {
+                    if (state.currentPage === 1) displaySkeletons();
+                    endpoint = `${API_URL}/search/multi${API_KEY_PARAM}&query=${encodeURIComponent(state.currentQuery)}&page=${state.currentPage}`;
+                } else {
+                    if (state.currentPage === 1) displaySkeletons();
+                    const discoverOrPopular = state.currentGenre ? 'discover' : 'popular';
+                    endpoint = `${API_URL}/${state.currentMode === 'movie' ? 'movie' : 'tv'}/${discoverOrPopular}${API_KEY_PARAM}&${baseParams}`;
+                }
 
-            const response = await fetch(endpoint);
-            const data = await response.json();
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
 
-            if (state.currentPage === 1) {
-                dom.contentGrid.innerHTML = '';
-            }
+                if (state.currentPage === 1) {
+                    dom.contentGrid.innerHTML = '';
+                }
 
-            appendContent(data.results);
+                appendContent(data.results);
 
-            if (data.page < data.total_pages) {
-                dom.loadMoreBtn.style.display = 'inline-block';
-            }
+                if (data.page < data.total_pages) {
+                    dom.loadMoreBtn.style.display = 'inline-block';
+                }
+            });
         } catch (error) {
             console.error('Error fetching content:', error);
-            dom.contentGrid.innerHTML = '<p>Error loading content. Please check your internet connection and try again in a few minutes.</p>';
+            dom.contentGrid.innerHTML = '<p>Error loading content. Please check your internet connection and try again in a few minutes.</p><button id="retryBtn" class="retry-btn">Retry</button>';
+            document.getElementById('retryBtn').addEventListener('click', () => {
+                state.currentPage = 1;
+                dom.contentGrid.innerHTML = '';
+                fetchContent();
+            });
         } finally {
             state.isFetching = false;
         }
