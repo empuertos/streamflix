@@ -32,7 +32,7 @@ const CONFIG = {
     },
 
     // Maintenance mode
-    MAINTENANCE_MODE: false, // Set to true to enable maintenance mode
+    MAINTENANCE_MODE: true, // Set to true to enable maintenance mode
     MAINTENANCE_MESSAGE: "We're currently performing some scheduled maintenance to improve your experience. StreamFlix will be back online shortly.",
     MAINTENANCE_ESTIMATED_TIME: "Soon"
 };

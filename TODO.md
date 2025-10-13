@@ -8,6 +8,6 @@
 
 ## Followup Steps
 - [x] Test maintenance mode by setting MAINTENANCE_MODE to true in config.js
-- [ ] Test admin bypass by visiting index.html?maintenance=off
+- [x] Test admin bypass by visiting index.html?maintenance=off
 - [ ] Deploy and verify on live site (e.g., Vercel)
 - [ ] Update maintenance message and estimated time as needed
