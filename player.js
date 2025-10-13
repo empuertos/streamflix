@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         episodeLoadingOverlay: document.getElementById('episodeLoadingOverlay'),
         controls: document.querySelector('.controls'),
         loadingMessage: document.querySelector('#loading p'),
+        retryBtn: document.getElementById('retryBtn'),
     };
 
     // --- Initialization ---
@@ -116,6 +117,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         dom.closePlayerBtn.addEventListener('click', () => window.close());
         dom.autoplayCancelBtn.addEventListener('click', cancelAutoplay);
+        dom.retryBtn.addEventListener('click', () => {
+            state.currentProviderIndex = 0;
+            state.currentProvider = state.providerKeys[0];
+            loadMovie();
+        });
 
         if (state.mode === 'tv') {
             dom.prevEpisodeBtn.addEventListener('click', (e) => {

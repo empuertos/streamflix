@@ -49,7 +49,8 @@ body {
     gap: 1rem;
 }
 
-.back-btn {
+.back-btn,
+.retry-btn {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
@@ -60,7 +61,8 @@ body {
     transition: background-color 0.3s;
 }
 
-.back-btn:hover {
+.back-btn:hover,
+.retry-btn:hover {
     background: rgba(255, 255, 255, 0.2);
 }
 
