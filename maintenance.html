@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00FF9D">
+    <title>StreamFlix - Under Maintenance</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .maintenance-container {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .logo i {
+            color: #00FF9D;
+            font-size: 3rem;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #00FF9D, #00cc7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .maintenance-icon {
+            font-size: 4rem;
+            color: #00FF9D;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #00FF9D;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: #f0f0f0;
+        }
+
+        .estimated-time {
+            background: rgba(0, 255, 157, 0.1);
+            border: 1px solid #00FF9D;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .estimated-time h3 {
+            color: #00FF9D;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-info {
+            margin-top: 2rem;
+        }
+
+        .contact-info h3 {
+            color: #00FF9D;
+            margin-bottom: 1rem;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: #e6e6e6;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .contact-links a:hover {
+            background: #00FF9D;
+            color: #1a1a2e;
+            transform: translateY(-3px);
+        }
+
+        .back-link {
+            margin-top: 2rem;
+            display: inline-block;
+            color: #00FF9D;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .maintenance-container {
+                padding: 2rem 1rem;
+            }
+
+            .logo h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .maintenance-icon {
+                font-size: 3rem;
+            }
+
+            .contact-links {
+                gap: 0.5rem;
+            }
+
+            .contact-links a {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-container">
+        <div class="logo">
+            <i class="fas fa-play-circle" aria-hidden="true"></i>
+            <h1>StreamFlix</h1>
+        </div>
+
+        <div class="maintenance-icon">
+            <i class="fas fa-tools"></i>
+        </div>
+
+        <h2>We're Under Maintenance</h2>
+        <p>We're currently performing some maintenance to improve your experience. StreamFlix will be back online shortly.</p>
+
+        <div class="estimated-time">
+            <h3>Estimated Return</h3>
+            <p>Expected back online: <strong>Soon</strong></p>
+        </div>
+
+        <div class="contact-info">
+            <h3>Need Help?</h3>
+            <div class="contact-links">
+                <a href="mailto:support@streamflix.com" aria-label="Email Support"><i class="fas fa-envelope"></i></a>
+                <a href="https://twitter.com/streamflix" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="https://discord.gg/streamflix" aria-label="Discord"><i class="fab fa-discord"></i></a>
+            </div>
+        </div>
+
+        <a href="#" onclick="window.history.back()" class="back-link">← Go Back</a>
+    </div>
+</body>
+</html>
