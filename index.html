@@ -744,6 +744,7 @@
             flex: 1;
             position: relative;
             background-color: black;
+            cursor: pointer;
         }
 
         .video-loading {
@@ -768,6 +769,129 @@
             width: 100%;
             height: 100%;
             border: none;
+            display: block;
+        }
+
+        /* Custom Player Controls */
+        .player-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 15;
+        }
+
+        .video-player:hover .player-controls {
+            opacity: 1;
+        }
+
+        .controls-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .controls-bottom {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .play-pause-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .play-pause-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-container {
+            flex: 1;
+            position: relative;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 0 1rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .time-display {
+            color: white;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .volume-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            width: 70%;
+        }
+
+        .fullscreen-btn, .pip-btn, .next-episode-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .fullscreen-btn:hover, .pip-btn:hover, .next-episode-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .next-episode-btn {
+            display: none;
+        }
+
+        .tv-mode .next-episode-btn {
             display: block;
         }
 
@@ -1177,6 +1301,26 @@
                                 <iframe class="stream-iframe" id="streamIframe" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"
                                     referrerpolicy="strict-origin-when-cross-origin">
                                 </iframe>
+                                <div class="player-controls" id="playerControls">
+                                    <div class="controls-top">
+                                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                                        <div class="volume-container">
+                                            <button class="volume-btn" id="volumeBtn"><i class="fas fa-volume-up"></i></button>
+                                            <div class="volume-slider" id="volumeSlider">
+                                                <div class="volume-fill" id="volumeFill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="controls-bottom">
+                                        <button class="play-pause-btn" id="playPauseBtn"><i class="fas fa-play"></i></button>
+                                        <div class="progress-container" id="progressContainer">
+                                            <div class="progress-bar" id="progressBar"></div>
+                                        </div>
+                                        <button class="pip-btn" id="pipBtn"><i class="fas fa-external-link-alt"></i></button>
+                                        <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
+                                        <button class="next-episode-btn" id="nextEpisodeBtn"><i class="fas fa-step-forward"></i></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
