@@ -416,5 +416,3 @@ async function getVideoModalHTML(url, env) {
     headers: { 'Content-Type': 'text/html' },
   });
 }
-
-

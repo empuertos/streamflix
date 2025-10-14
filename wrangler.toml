@@ -1,0 +1,6 @@
+name = "streamflix-api"
+main = "worker.js"
+compatibility_date = "2023-01-01"
+
+[vars]
+# No secrets here - API keys are hardcoded in the worker for security
