@@ -1891,6 +1891,9 @@
         }
 
         async function performGenreFilter(genreId, type) {
+            // Store the last action for retry functionality
+            window.lastGenreFilter = { genreId, type };
+
             try {
                 console.log('Performing genre filter:', { genreId, type });
                 showSearchLoading(true);
@@ -1906,24 +1909,60 @@
                 const response = await fetch(endpoint);
 
                 if (!response.ok) {
+                    console.error('API Error:', response.status, response.statusText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                console.log('Genre filter results:', data.results.length);
+                console.log('Genre filter results:', data.results ? data.results.length : 'No results', data);
 
-                displayContent(data.results);
-                updateSearchResultsCounter(data.results.length);
+                if (!data.results || data.results.length === 0) {
+                    console.warn('No results returned from API for genre filter');
+                    contentGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc;">
+                            <i class="fas fa-search" style="font-size: 64px; color: var(--primary); margin-bottom: 30px;"></i>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">No ${type === 'movie' ? 'movies' : 'TV shows'} found</h3>
+                            <p style="font-size: 1.1rem;">This genre might not have content available at the moment.</p>
+                        </div>
+                    `;
+                    updateSearchResultsCounter(0);
+                } else {
+                    displayContent(data.results);
+                    updateSearchResultsCounter(data.results.length);
+                }
+
                 showSearchLoading(false);
 
             } catch (error) {
                 console.error('Error filtering by genre:', error);
                 showSearchLoading(false);
-                alert('Error filtering by genre. Please try again.');
+
+                // Show a more user-friendly error message
+                contentGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: var(--accent); margin-bottom: 30px;"></i>
+                        <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Unable to filter by genre</h3>
+                        <p style="font-size: 1.1rem; margin-bottom: 20px;">${error.message}</p>
+                        <button onclick="retryLastAction()" style="background: var(--primary); color: var(--secondary); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Try Again</button>
+                    </div>
+                `;
+                updateSearchResultsCounter(0);
+            }
+        }
+
+        // Function to retry the last action
+        function retryLastAction() {
+            if (window.lastGenreFilter) {
+                performGenreFilter(window.lastGenreFilter.genreId, window.lastGenreFilter.type);
+            } else if (window.lastYearFilter) {
+                performYearFilter(window.lastYearFilter);
             }
         }
 
         async function performYearFilter(year) {
+            // Store the last action for retry functionality
+            window.lastYearFilter = year;
+
             try {
                 showSearchLoading(true);
 
