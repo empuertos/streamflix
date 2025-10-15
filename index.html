@@ -1740,7 +1740,7 @@
                         const clickedGenreId = this.getAttribute('data-genre-id');
                         const clickedType = this.getAttribute('data-genre-type');
                         console.log('Movie category clicked:', genreName, 'ID:', clickedGenreId);
-                        filterByGenre(parseInt(clickedGenreId), clickedType);
+                        filterByGenre(parseInt(clickedGenreId), clickedType, e);
                     });
 
                     container.appendChild(categoryItem);
@@ -1798,7 +1798,7 @@
                         const clickedGenreId = this.getAttribute('data-genre-id');
                         const clickedType = this.getAttribute('data-genre-type');
                         console.log('TV category clicked:', genreName, 'ID:', clickedGenreId);
-                        filterByGenre(parseInt(clickedGenreId), clickedType);
+                        filterByGenre(parseInt(clickedGenreId), clickedType, e);
                     });
 
                     container.appendChild(categoryItem);
@@ -1850,7 +1850,7 @@
                 });
         }
 
-        function filterByGenre(genreId, type) {
+        function filterByGenre(genreId, type, event) {
             console.log('Filtering by genre:', genreId, 'Type:', type);
 
             // Remove active class from all categories
@@ -1859,8 +1859,8 @@
             });
 
             // Add active class to clicked category
-            if (event && event.target) {
-                const clickedItem = event.target.closest('.category-item');
+            if (event && event.currentTarget) {
+                const clickedItem = event.currentTarget;
                 if (clickedItem) {
                     clickedItem.classList.add('active');
                 }
@@ -1870,14 +1870,17 @@
             performGenreFilter(genreId, type);
         }
 
-        function filterByYear(year) {
+        // Clear the main content grid before displaying new results
+        contentGrid.innerHTML = '';
+
+        function filterByYear(year, event) {
             console.log('Filtering by year:', year);
 
             // Remove active class from all years
             document.querySelectorAll('.year-item').forEach(item => {
                 item.classList.remove('active');
             });
-
+            
             // Add active class to clicked year
             if (event && event.target) {
                 const clickedItem = event.target.closest('.year-item');
@@ -1893,6 +1896,9 @@
         async function performGenreFilter(genreId, type) {
             // Store the last action for retry functionality
             window.lastGenreFilter = { genreId, type };
+
+            // Set the current mode to match the filter type
+            currentMode = type;
 
             try {
                 console.log('Performing genre filter:', { genreId, type });
@@ -3446,7 +3452,7 @@
                     const genreType = this.getAttribute('data-genre-type');
                     const genreText = this.querySelector('span').textContent;
                     console.log('Movie category clicked:', genreText, 'ID:', genreId);
-                    filterByGenre(parseInt(genreId), genreType);
+                    filterByGenre(parseInt(genreId), genreType, e);
                 });
             });
 
@@ -3460,7 +3466,7 @@
                     const genreType = this.getAttribute('data-genre-type');
                     const genreText = this.querySelector('span').textContent;
                     console.log('TV category clicked:', genreText, 'ID:', genreId);
-                    filterByGenre(parseInt(genreId), genreType);
+                    filterByGenre(parseInt(genreId), genreType, e);
                 });
             });
 
@@ -3472,7 +3478,7 @@
                     e.stopPropagation();
                     const year = this.getAttribute('data-year');
                     console.log('Year category clicked:', year);
-                    filterByYear(year);
+                    filterByYear(year, e);
                 });
             });
 
