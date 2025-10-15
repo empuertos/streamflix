@@ -1657,6 +1657,7 @@
         // Load and populate categories
         async function loadCategories() {
             try {
+                console.log('Loading categories...');
                 const [movieResponse, tvResponse] = await Promise.all([
                     fetch(`${API_URL}/movie/popular?page=1`),
                     fetch(`${API_URL}/tv/popular?page=1`)
@@ -1667,9 +1668,21 @@
                     tvResponse.json()
                 ]);
 
+                console.log('Categories data loaded:', {
+                    movies: movieData.results.length,
+                    tvShows: tvData.results.length
+                });
+
                 populateMovieCategories(movieData.results);
                 populateTVCategories(tvData.results);
                 populateYearCategories([...movieData.results, ...tvData.results]);
+
+                // Attach event listeners after categories are populated
+                setTimeout(() => {
+                    attachCategoryEventListeners();
+                }, 500);
+
+                console.log('Categories populated successfully');
 
             } catch (error) {
                 console.error('Error loading categories:', error);
@@ -1713,13 +1726,23 @@
                     const genreName = genreNames[genreId] || `Genre ${genreId}`;
                     const categoryItem = document.createElement('div');
                     categoryItem.className = 'category-item';
+                    categoryItem.setAttribute('data-genre-id', genreId);
+                    categoryItem.setAttribute('data-genre-type', 'movie');
                     categoryItem.innerHTML = `
                         <span>${genreName}</span>
                         <span class="category-count">${data.count}</span>
                     `;
-                    categoryItem.addEventListener('click', () => {
-                        filterByGenre(genreId, 'movie');
+
+                    // Add click event listener with proper context
+                    categoryItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const clickedGenreId = this.getAttribute('data-genre-id');
+                        const clickedType = this.getAttribute('data-genre-type');
+                        console.log('Movie category clicked:', genreName, 'ID:', clickedGenreId);
+                        filterByGenre(parseInt(clickedGenreId), clickedType);
                     });
+
                     container.appendChild(categoryItem);
                 });
         }
@@ -1761,13 +1784,23 @@
                     const genreName = genreNames[genreId] || `Genre ${genreId}`;
                     const categoryItem = document.createElement('div');
                     categoryItem.className = 'category-item';
+                    categoryItem.setAttribute('data-genre-id', genreId);
+                    categoryItem.setAttribute('data-genre-type', 'tv');
                     categoryItem.innerHTML = `
                         <span>${genreName}</span>
                         <span class="category-count">${data.count}</span>
                     `;
-                    categoryItem.addEventListener('click', () => {
-                        filterByGenre(genreId, 'tv');
+
+                    // Add click event listener with proper context
+                    categoryItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const clickedGenreId = this.getAttribute('data-genre-id');
+                        const clickedType = this.getAttribute('data-genre-type');
+                        console.log('TV category clicked:', genreName, 'ID:', clickedGenreId);
+                        filterByGenre(parseInt(clickedGenreId), clickedType);
                     });
+
                     container.appendChild(categoryItem);
                 });
         }
@@ -1798,38 +1831,60 @@
                 .forEach(([year, count]) => {
                     const yearItem = document.createElement('div');
                     yearItem.className = 'year-item';
+                    yearItem.setAttribute('data-year', year);
                     yearItem.innerHTML = `
                         <span>${year}</span>
                         <span class="year-count">${count}</span>
                     `;
-                    yearItem.addEventListener('click', () => {
-                        filterByYear(year);
+
+                    // Add click event listener with proper context
+                    yearItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const clickedYear = this.getAttribute('data-year');
+                        console.log('Year clicked:', clickedYear);
+                        filterByYear(clickedYear);
                     });
+
                     container.appendChild(yearItem);
                 });
         }
 
         function filterByGenre(genreId, type) {
+            console.log('Filtering by genre:', genreId, 'Type:', type);
+
             // Remove active class from all categories
             document.querySelectorAll('.category-item').forEach(item => {
                 item.classList.remove('active');
             });
 
             // Add active class to clicked category
-            event.target.closest('.category-item').classList.add('active');
+            if (event && event.target) {
+                const clickedItem = event.target.closest('.category-item');
+                if (clickedItem) {
+                    clickedItem.classList.add('active');
+                }
+            }
 
             // Filter content by genre
             performGenreFilter(genreId, type);
         }
 
         function filterByYear(year) {
+            console.log('Filtering by year:', year);
+
             // Remove active class from all years
             document.querySelectorAll('.year-item').forEach(item => {
                 item.classList.remove('active');
             });
 
             // Add active class to clicked year
-            event.target.closest('.year-item').classList.add('active');
+            if (event && event.target) {
+                const clickedItem = event.target.closest('.year-item');
+                if (clickedItem) {
+                    clickedItem.classList.add('active');
+                }
+            }
 
             // Filter content by year
             performYearFilter(year);
@@ -1837,6 +1892,7 @@
 
         async function performGenreFilter(genreId, type) {
             try {
+                console.log('Performing genre filter:', { genreId, type });
                 showSearchLoading(true);
 
                 let endpoint;
@@ -1846,8 +1902,15 @@
                     endpoint = `${API_URL}/discover/tv?with_genres=${genreId}&page=1`;
                 }
 
+                console.log('Genre filter endpoint:', endpoint);
                 const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
+                console.log('Genre filter results:', data.results.length);
 
                 displayContent(data.results);
                 updateSearchResultsCounter(data.results.length);
@@ -1856,6 +1919,7 @@
             } catch (error) {
                 console.error('Error filtering by genre:', error);
                 showSearchLoading(false);
+                alert('Error filtering by genre. Please try again.');
             }
         }
 
@@ -3331,18 +3395,76 @@
         window.filterByGenre = filterByGenre;
         window.filterByYear = filterByYear;
 
-        // Add trending category click handlers
+        // Add trending category click handlers and ensure all categories work
+        function attachCategoryEventListeners() {
+            // Attach movie category listeners
+            const movieCategories = document.querySelectorAll('#movieCategories .category-item');
+            movieCategories.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const genreId = this.getAttribute('data-genre-id');
+                    const genreType = this.getAttribute('data-genre-type');
+                    const genreText = this.querySelector('span').textContent;
+                    console.log('Movie category clicked:', genreText, 'ID:', genreId);
+                    filterByGenre(parseInt(genreId), genreType);
+                });
+            });
+
+            // Attach TV category listeners
+            const tvCategories = document.querySelectorAll('#tvCategories .category-item');
+            tvCategories.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const genreId = this.getAttribute('data-genre-id');
+                    const genreType = this.getAttribute('data-genre-type');
+                    const genreText = this.querySelector('span').textContent;
+                    console.log('TV category clicked:', genreText, 'ID:', genreId);
+                    filterByGenre(parseInt(genreId), genreType);
+                });
+            });
+
+            // Attach year category listeners
+            const yearCategories = document.querySelectorAll('#yearCategories .year-item');
+            yearCategories.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const year = this.getAttribute('data-year');
+                    console.log('Year category clicked:', year);
+                    filterByYear(year);
+                });
+            });
+
+            // Attach trending category listeners
+            const trendingItems = document.querySelectorAll('.trending-item');
+            trendingItems.forEach(item => {
+                item.addEventListener('click', handleTrendingClick);
+            });
+
+            console.log('Category event listeners attached:', {
+                movieCategories: movieCategories.length,
+                tvCategories: tvCategories.length,
+                yearCategories: yearCategories.length,
+                trendingItems: trendingItems.length
+            });
+        }
+
+        // Call this after categories are loaded
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                const trendingItems = document.querySelectorAll('.trending-item');
-                trendingItems.forEach(item => {
-                    item.addEventListener('click', handleTrendingClick);
-                });
-            }, 1000);
+                attachCategoryEventListeners();
+            }, 1500);
         });
 
         function handleTrendingClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
             const text = e.target.textContent.trim();
+            console.log('Trending clicked:', text);
+
             const searchInput = document.getElementById('searchInput');
 
             if (searchInput) {
