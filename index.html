@@ -116,6 +116,79 @@
             position: relative;
         }
 
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(ellipse at center,
+                rgba(0, 255, 157, 0.1) 0%,
+                rgba(0, 255, 157, 0.05) 30%,
+                transparent 70%);
+            border-radius: 50px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        .search-container:hover::before {
+            opacity: 1;
+        }
+
+        .search-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow:
+                0 0 10px var(--primary),
+                20px 0 0 #00cc7a,
+                -20px 0 0 #ff2e63,
+                0 20px 0 var(--primary),
+                0 -20px 0 #00cc7a,
+                14px 14px 0 #ff2e63,
+                -14px -14px 0 var(--primary),
+                -14px 14px 0 #00cc7a,
+                14px -14px 0 #ff2e63;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        .search-container:hover::after {
+            opacity: 0.8;
+        }
+
+        @keyframes sparkle {
+            0%, 100% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+
         .search-suggestions {
             animation: fadeIn 0.2s ease-in;
         }
@@ -199,6 +272,60 @@
             50% { opacity: 0.5; }
         }
 
+        /* Animated placeholder effect */
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        .search-box:focus::placeholder {
+            color: rgba(0, 255, 157, 0.7);
+            animation: placeholderGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes placeholderGlow {
+            0%, 100% {
+                opacity: 0.7;
+                text-shadow: 0 0 5px rgba(0, 255, 157, 0.5);
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px rgba(0, 255, 157, 0.8);
+            }
+        }
+
+        /* Typing indicator animation */
+        @keyframes typing {
+            0% { width: 0; }
+            50% { width: 100%; }
+            100% { width: 0; }
+        }
+
+        .typing-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 2px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
         @keyframes breathe {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.05); opacity: 0.8; }
@@ -256,14 +383,50 @@
             background-color: var(--dark);
             color: var(--text);
             width: 300px;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                var(--primary),
+                #00cc7a,
+                var(--primary),
+                #ff2e63,
+                var(--primary));
+            background-size: 400% 400%;
+            border-radius: 32px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 3s ease-in-out infinite;
         }
 
         .search-box:focus {
             outline: none;
             border-color: var(--primary);
             width: 350px;
+            box-shadow:
+                0 0 20px rgba(0, 255, 157, 0.3),
+                0 0 40px rgba(0, 255, 157, 0.1),
+                inset 0 0 20px rgba(0, 255, 157, 0.05);
+        }
+
+        .search-box:focus::before {
+            opacity: 1;
+        }
+
+        .search-box:hover {
+            border-color: rgba(0, 255, 157, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
         }
 
         .search-btn {
@@ -277,6 +440,9 @@
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             position: relative;
             overflow: hidden;
+            box-shadow:
+                0 4px 15px rgba(0, 255, 157, 0.2),
+                0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .search-btn::before {
@@ -286,8 +452,34 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.6s ease;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                rgba(0, 255, 157, 0.4),
+                rgba(255, 255, 255, 0.3),
+                transparent);
+            transition: left 0.8s ease;
+        }
+
+        .search-btn::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                var(--primary),
+                #00cc7a,
+                var(--primary),
+                #ff2e63,
+                var(--primary));
+            background-size: 300% 300%;
+            border-radius: 37px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 4s ease-in-out infinite;
         }
 
         .search-btn:hover::before {
@@ -296,8 +488,20 @@
 
         .search-btn:hover {
             background: linear-gradient(135deg, #00cc7a 0%, #00b369 100%);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(0, 255, 157, 0.3);
+            transform: translateY(-4px) scale(1.08) rotate(2deg);
+            box-shadow:
+                0 8px 25px rgba(0, 255, 157, 0.4),
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .search-btn:hover::after {
+            opacity: 0.7;
+        }
+
+        .search-btn:active {
+            transform: translateY(-2px) scale(1.05) rotate(1deg);
+            transition: all 0.1s ease;
         }
 
         .container {
@@ -308,7 +512,7 @@
 
         .hero {
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)),
-                         url('https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg');
+                          url('https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg');
             background-size: cover;
             background-position: center;
             height: 75vh;
@@ -322,6 +526,7 @@
             overflow: hidden;
             background-attachment: fixed;
             box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease-in-out;
         }
 
         .hero::before {
@@ -394,6 +599,23 @@
         .hero-btns {
             display: flex;
             gap: 1.5rem;
+            position: relative;
+        }
+
+        .hero-status {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hero:hover .hero-status {
+            opacity: 1;
         }
 
         .btn {
@@ -426,27 +648,138 @@
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, #00cc7a 100%);
             color: var(--secondary);
-            box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
+            box-shadow:
+                0 4px 15px rgba(0, 255, 157, 0.2),
+                0 2px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                rgba(0, 255, 157, 0.4),
+                rgba(255, 255, 255, 0.3),
+                transparent);
+            transition: left 0.8s ease;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                var(--primary),
+                #00cc7a,
+                var(--primary),
+                #ff2e63,
+                var(--primary));
+            background-size: 300% 300%;
+            border-radius: 37px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 4s ease-in-out infinite;
         }
 
         .btn-primary:hover {
             background: linear-gradient(135deg, #00cc7a 0%, #00b369 100%);
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+            transform: translateY(-6px) scale(1.05) rotate(1deg);
+            box-shadow:
+                0 10px 30px rgba(0, 255, 157, 0.4),
+                0 5px 20px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover::after {
+            opacity: 0.8;
+        }
+
+        .btn-primary:active {
+            transform: translateY(-3px) scale(1.02);
+            transition: all 0.1s ease;
         }
 
         .btn-secondary {
             background-color: transparent;
             color: var(--text);
             border: 2px solid var(--text);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-secondary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(0, 255, 157, 0.2),
+                rgba(255, 255, 255, 0.1),
+                transparent);
+            transition: left 0.7s ease;
+        }
+
+        .btn-secondary::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                transparent,
+                rgba(0, 255, 157, 0.3),
+                transparent,
+                rgba(255, 46, 99, 0.2),
+                transparent);
+            background-size: 200% 200%;
+            border-radius: 37px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 5s ease-in-out infinite;
         }
 
         .btn-secondary:hover {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 255, 157, 0.05) 100%);
             border-color: var(--primary);
             color: var(--primary);
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 255, 157, 0.15);
+            transform: translateY(-6px) scale(1.05) rotate(-1deg);
+            box-shadow:
+                0 10px 30px rgba(0, 255, 157, 0.15),
+                0 5px 20px rgba(0, 0, 0, 0.2),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary:hover::after {
+            opacity: 0.6;
+        }
+
+        .btn-secondary:active {
+            transform: translateY(-3px) scale(1.02);
+            transition: all 0.1s ease;
         }
 
         .section-title {
@@ -2118,6 +2451,7 @@
                     <button class="btn btn-primary" id="startWatchingBtn"><i class="fas fa-play"></i> Start Watching</button>
                     <button class="btn btn-secondary" id="moreInfoBtn"><i class="fas fa-info-circle"></i> More Info</button>
                 </div>
+                <div class="hero-status" id="heroStatus"></div>
             </div>
         </section>
 
@@ -2240,8 +2574,14 @@
             addSearchEnhancements();
             loadCategories();
             initializeImageLoading();
+
             // Set interval to refetch hero movies every 5 minutes
             setInterval(fetchHeroMovies, 5 * 60 * 1000);
+
+            // Start the slideshow after hero movies are loaded
+            setTimeout(() => {
+                startHeroSlideshow();
+            }, 2000);
 
             // Add debugging for cast/crew loading
             console.log('StreamFlix initialized with cast/crew support');
@@ -2256,7 +2596,35 @@
                 checkAPI: () => console.log('API URL:', API_URL)
             };
 
-            console.log('Debug commands available: debugCast.refreshAll(), debugCast.testData(), debugCast.checkAPI()');
+            // Add hero slideshow debugging commands
+            window.debugHero = {
+                sync: syncButtonsWithDisplay,
+                refresh: refreshButtonStates,
+                getCurrent: getCurrentDisplayedMovie,
+                checkState: () => {
+                    console.log('Hero Debug Info:');
+                    console.log('- Total movies:', heroMovies.length);
+                    console.log('- Current index:', currentHeroIndex);
+                    console.log('- Current displayed:', currentDisplayedMovie?.title);
+                    console.log('- Is slideshow running:', slideshowInterval !== null);
+                    console.log('- Is paused:', isPaused);
+                },
+                forceUpdate: () => {
+                    console.log('Force updating hero display...');
+                    updateHero();
+                },
+                resetIndex: () => {
+                    currentHeroIndex = 0;
+                    if (heroMovies.length > 0) {
+                        currentDisplayedMovie = heroMovies[0];
+                    }
+                    console.log('Hero index reset to 0');
+                }
+            };
+
+            console.log('Debug commands available:');
+            console.log('- debugCast.refreshAll(), debugCast.testData(), debugCast.checkAPI()');
+            console.log('- debugHero.sync(), debugHero.refresh(), debugHero.getCurrent(), debugHero.checkState()');
         });
 
         // Initialize enhanced image loading system
@@ -2899,12 +3267,20 @@
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
 
+                // Add typing animation effect
+                if (query.length > 0 && query.length <= 3) {
+                    addTypingEffect();
+                } else {
+                    removeTypingEffect();
+                }
+
                 // Show results immediately for every keystroke if query length > 0
                 if (query.length > 0) {
                     showLiveSearchResults(query);
                 } else {
                     hideLiveSearchResults();
                     hideSearchSuggestions();
+                    removeTypingEffect();
                     // Show default content when search is cleared
                     currentQuery = '';
                     currentPage = 1;
@@ -2930,9 +3306,39 @@
 
             searchInput.addEventListener('focus', () => {
                 const query = searchInput.value.trim();
+
+                // Add focus glow effect
+                searchInput.style.boxShadow = `
+                    0 0 20px rgba(0, 255, 157, 0.4),
+                    0 0 40px rgba(0, 255, 157, 0.2),
+                    inset 0 0 20px rgba(0, 255, 157, 0.1)
+                `;
+
+                // Add breathing animation to search container
+                const searchContainer = searchInput.parentNode;
+                searchContainer.style.animation = 'breathe 2s ease-in-out infinite';
+
                 if (query.length > 0) {
                     showLiveSearchResults(query);
                 }
+            });
+
+            searchInput.addEventListener('blur', () => {
+                // Remove focus effects after a short delay
+                setTimeout(() => {
+                    searchInput.style.boxShadow = '';
+
+                    // Remove breathing animation
+                    const searchContainer = searchInput.parentNode;
+                    searchContainer.style.animation = '';
+
+                    removeTypingEffect();
+                }, 200);
+
+                setTimeout(() => {
+                    hideLiveSearchResults();
+                    hideSearchSuggestions();
+                }, 200);
             });
 
             movieModeBtn.addEventListener('click', () => switchMode('movie'));
@@ -2963,6 +3369,47 @@
             // Watch button in modal
             watchBtn.addEventListener('click', () => {
                 playVideo(currentItem);
+            });
+
+            // More Info button - show details for current hero movie
+            moreInfoBtn.addEventListener('click', () => {
+                console.log('More Info button clicked');
+                console.log('Hero movies:', heroMovies);
+                console.log('Current hero index:', currentHeroIndex);
+                console.log('Current displayed movie:', currentDisplayedMovie);
+
+                const currentMovie = getCurrentDisplayedMovie();
+
+                if (currentMovie && currentMovie.id) {
+                    console.log('Showing details for movie:', currentMovie.title, 'ID:', currentMovie.id);
+                    currentMode = 'movie'; // Set mode to movie for hero content
+                    showDetails(currentMovie.id);
+                } else {
+                    console.error('Current movie or movie ID is missing');
+                    console.log('Available movies:', heroMovies);
+                    alert('Movie information not available. Please wait for content to load.');
+                }
+            });
+
+            // Start Watching button - play current hero movie
+            startWatchingBtn.addEventListener('click', () => {
+                console.log('Start Watching button clicked');
+                console.log('Hero movies:', heroMovies);
+                console.log('Current hero index:', currentHeroIndex);
+                console.log('Current displayed movie:', currentDisplayedMovie);
+
+                const currentMovie = getCurrentDisplayedMovie();
+
+                if (currentMovie && currentMovie.id) {
+                    console.log('Playing movie:', currentMovie.title, 'ID:', currentMovie.id);
+                    currentMode = 'movie'; // Set mode to movie for hero content
+                    currentItem = currentMovie;
+                    playVideo(currentMovie);
+                } else {
+                    console.error('Current movie or movie ID is missing');
+                    console.log('Available movies:', heroMovies);
+                    alert('Movie information not available. Please wait for content to load.');
+                }
             });
         }
 
@@ -3533,7 +3980,14 @@
                 loadingIndicator = document.createElement('div');
                 loadingIndicator.id = 'searchLoading';
                 loadingIndicator.className = 'search-loading';
-                loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+                loadingIndicator.innerHTML = `
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span style="margin-left: 8px;">Searching...</span>
+                `;
                 loadingIndicator.style.cssText = `
                     position: absolute;
                     top: 50%;
@@ -3545,12 +3999,57 @@
                     display: flex;
                     align-items: center;
                     gap: 8px;
+                    background: rgba(0, 0, 0, 0.7);
+                    padding: 8px 12px;
+                    border-radius: 20px;
+                    border: 1px solid rgba(0, 255, 157, 0.3);
+                    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
                 `;
                 document.querySelector('.search-container').appendChild(loadingIndicator);
+
+                // Add sparkle effect
+                setTimeout(() => {
+                    if (loadingIndicator && loadingIndicator.parentNode) {
+                        loadingIndicator.style.animation = 'sparklePulse 1s ease-in-out infinite';
+                    }
+                }, 100);
+
             } else if (!show && loadingIndicator) {
-                loadingIndicator.remove();
+                loadingIndicator.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    if (loadingIndicator && loadingIndicator.parentNode) {
+                        loadingIndicator.remove();
+                    }
+                }, 300);
             }
         }
+
+        // Add sparkle pulse animation
+        const sparklePulseStyle = document.createElement('style');
+        sparklePulseStyle.textContent = `
+            @keyframes sparklePulse {
+                0%, 100% {
+                    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
+                    transform: translateY(-50%) scale(1);
+                }
+                50% {
+                    box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4);
+                    transform: translateY(-50%) scale(1.02);
+                }
+            }
+
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(-50%) scale(1);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(-50%) scale(0.9);
+                }
+            }
+        `;
+        document.head.appendChild(sparklePulseStyle);
 
         function updateSearchResultsCounter(resultCount) {
             let counter = document.getElementById('searchResultsCounter');
@@ -3631,10 +4130,22 @@
         // Fetch hero movies
         async function fetchHeroMovies() {
             try {
+                console.log('Fetching hero movies...');
                 const response = await fetch(`${API_URL}/movie/popular?page=1`);
                 const data = await response.json();
                 heroMovies = data.results.slice(0, 10);
-                updateHero();
+                currentHeroIndex = 0; // Reset index when new movies are loaded
+
+                // Set the current displayed movie
+                if (heroMovies.length > 0) {
+                    currentDisplayedMovie = heroMovies[0];
+                }
+
+                console.log('Hero movies loaded:', heroMovies.length);
+                console.log('Current displayed movie set to:', currentDisplayedMovie?.title);
+
+                // Restart slideshow with new movies
+                restartHeroSlideshow();
             } catch (error) {
                 console.error('Error fetching hero movies:', error);
             }
@@ -3643,15 +4154,145 @@
         // Update hero section
         function updateHero() {
             if (heroMovies.length === 0) return;
+
             const movie = heroMovies[currentHeroIndex];
             const title = movie.title;
             const overview = movie.overview;
             const backdropPath = movie.backdrop_path;
             const backdrop = backdropPath ? `https://image.tmdb.org/t/p/original${backdropPath}` : 'https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg';
-            document.getElementById('heroTitle').textContent = title;
-            document.getElementById('heroDesc').textContent = overview ? overview.substring(0, 200) + '...' : 'No description available.';
-            document.querySelector('.hero').style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdrop}')`;
+
+            // Set the current displayed movie for button synchronization
+            currentDisplayedMovie = movie;
+
+            console.log('Updating hero to:', title, 'Index:', currentHeroIndex);
+
+            // Add fade effect
+            const heroElement = document.querySelector('.hero');
+            heroElement.style.opacity = '0.7';
+
+            setTimeout(() => {
+                document.getElementById('heroTitle').textContent = title;
+                document.getElementById('heroDesc').textContent = overview ? overview.substring(0, 200) + '...' : 'No description available.';
+                heroElement.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdrop}')`;
+                heroElement.style.opacity = '1';
+
+                // Update status indicator
+                updateHeroStatus(movie);
+            }, 300);
+
             currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
+        }
+
+        // Update hero status indicator
+        function updateHeroStatus(movie) {
+            const statusElement = document.getElementById('heroStatus');
+            if (statusElement && movie) {
+                const year = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
+                const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
+
+                statusElement.innerHTML = `
+                    <i class="fas fa-film"></i>
+                    Now Showing: <strong>${movie.title}</strong>
+                    ${year ? `<span class="year-badge">${year}</span>` : ''}
+                    ${rating ? `<span class="rating-badge"><i class="fas fa-star"></i> ${rating}</span>` : ''}
+                `;
+            }
+        }
+
+        // Slideshow state
+        let slideshowInterval = null;
+        let isPaused = false;
+        let currentDisplayedMovie = null;
+
+        // Start hero slideshow
+        function startHeroSlideshow() {
+            if (heroMovies.length <= 1) {
+                console.log('Not enough hero movies for slideshow');
+                return;
+            }
+
+            console.log('Starting hero slideshow with', heroMovies.length, 'movies');
+
+            // Update hero every 8 seconds
+            slideshowInterval = setInterval(() => {
+                if (heroMovies.length > 0 && !isPaused) {
+                    updateHero();
+                }
+            }, 8000);
+
+            // Pause slideshow on hover
+            const heroElement = document.querySelector('.hero');
+            if (heroElement) {
+                heroElement.addEventListener('mouseenter', () => {
+                    isPaused = true;
+                });
+
+                heroElement.addEventListener('mouseleave', () => {
+                    isPaused = false;
+                });
+            }
+
+            // Also update hero immediately
+            updateHero();
+        }
+
+        // Get the currently displayed movie (safe method)
+        function getCurrentDisplayedMovie() {
+            if (heroMovies.length === 0) return null;
+
+            // Ensure currentHeroIndex is within bounds
+            const safeIndex = currentHeroIndex % heroMovies.length;
+            if (safeIndex < 0) {
+                currentHeroIndex = 0;
+            }
+
+            currentDisplayedMovie = heroMovies[safeIndex];
+            return currentDisplayedMovie;
+        }
+
+        // Function to restart slideshow (useful if movies are reloaded)
+        function restartHeroSlideshow() {
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+            }
+            if (heroMovies.length > 1) {
+                startHeroSlideshow();
+            }
+        }
+
+        // Manual sync function for debugging
+        function syncButtonsWithDisplay() {
+            const currentMovie = getCurrentDisplayedMovie();
+            console.log('Manual sync - Current displayed movie:', currentMovie?.title);
+            console.log('Current hero index:', currentHeroIndex);
+            console.log('Total hero movies:', heroMovies.length);
+
+            if (currentMovie) {
+                console.log('✅ Buttons are synced with:', currentMovie.title);
+            } else {
+                console.log('❌ No current movie available');
+            }
+
+            return currentMovie;
+        }
+
+        // Force refresh of button states
+        function refreshButtonStates() {
+            const currentMovie = getCurrentDisplayedMovie();
+
+            if (currentMovie) {
+                console.log('Refreshing button states for:', currentMovie.title);
+
+                // Update any UI elements that show current movie info
+                const heroTitle = document.getElementById('heroTitle');
+                const heroDesc = document.getElementById('heroDesc');
+
+                if (heroTitle && heroDesc) {
+                    console.log('✅ Hero display is current');
+                } else {
+                    console.log('❌ Hero elements not found');
+                }
+            }
         }
 
         // Display content in the grid
@@ -4217,6 +4858,48 @@
             const videoLoading = document.getElementById('videoLoading');
             if (videoLoading) {
                 videoLoading.style.display = 'flex';
+            }
+        }
+
+        // Add typing animation effect
+        function addTypingEffect() {
+            const searchBox = document.getElementById('searchInput');
+            if (!searchBox) return;
+
+            let typingIndicator = document.getElementById('typingIndicator');
+            if (!typingIndicator) {
+                typingIndicator = document.createElement('div');
+                typingIndicator.id = 'typingIndicator';
+                typingIndicator.className = 'typing-indicator';
+                typingIndicator.innerHTML = `
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                `;
+                searchBox.parentNode.appendChild(typingIndicator);
+            }
+
+            typingIndicator.style.display = 'flex';
+
+            // Add glow effect to search box while typing
+            searchBox.style.boxShadow = `
+                0 0 15px rgba(0, 255, 157, 0.3),
+                0 0 30px rgba(0, 255, 157, 0.1),
+                inset 0 0 15px rgba(0, 255, 157, 0.05)
+            `;
+        }
+
+        // Remove typing animation effect
+        function removeTypingEffect() {
+            const searchBox = document.getElementById('searchInput');
+            const typingIndicator = document.getElementById('typingIndicator');
+
+            if (typingIndicator) {
+                typingIndicator.style.display = 'none';
+            }
+
+            if (searchBox) {
+                searchBox.style.boxShadow = '';
             }
         }
 
