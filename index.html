@@ -2578,10 +2578,19 @@
             // Set interval to refetch hero movies every 5 minutes
             setInterval(fetchHeroMovies, 5 * 60 * 1000);
 
-            // Start the slideshow after hero movies are loaded
-            setTimeout(() => {
-                startHeroSlideshow();
-            }, 2000);
+            // Start the slideshow after hero movies are loaded with proper delay
+            const startSlideshow = () => {
+                if (heroMovies.length > 0) {
+                    console.log('Starting hero slideshow with', heroMovies.length, 'movies');
+                    startHeroSlideshow();
+                } else {
+                    console.log('No hero movies available, retrying in 1 second...');
+                    setTimeout(startSlideshow, 1000);
+                }
+            };
+
+            // Wait for hero movies to load before starting slideshow
+            setTimeout(startSlideshow, 2000);
 
             // Add debugging for cast/crew loading
             console.log('StreamFlix initialized with cast/crew support');
@@ -2605,9 +2614,10 @@
                     console.log('Hero Debug Info:');
                     console.log('- Total movies:', heroMovies.length);
                     console.log('- Current index:', currentHeroIndex);
-                    console.log('- Current displayed:', currentDisplayedMovie?.title);
+                    console.log('- Current displayed:', currentDisplayedMovie?.title, 'ID:', currentDisplayedMovie?.id);
                     console.log('- Is slideshow running:', slideshowInterval !== null);
                     console.log('- Is paused:', isPaused);
+                    console.log('- Next update in:', slideshowInterval ? '8 seconds' : 'N/A');
                 },
                 forceUpdate: () => {
                     console.log('Force updating hero display...');
@@ -2619,6 +2629,17 @@
                         currentDisplayedMovie = heroMovies[0];
                     }
                     console.log('Hero index reset to 0');
+                },
+                testButtons: () => {
+                    console.log('Testing hero buttons...');
+                    const currentMovie = getCurrentDisplayedMovie();
+                    if (currentMovie) {
+                        console.log('✅ More Info button should show details for:', currentMovie.title);
+                        console.log('✅ Start Watching button should play:', currentMovie.title);
+                        console.log('✅ Movie ID for API calls:', currentMovie.id);
+                    } else {
+                        console.log('❌ No current movie available for buttons');
+                    }
                 }
             };
 
@@ -3374,9 +3395,9 @@
             // More Info button - show details for current hero movie
             moreInfoBtn.addEventListener('click', () => {
                 console.log('More Info button clicked');
-                console.log('Hero movies:', heroMovies);
+                console.log('Hero movies:', heroMovies.length);
                 console.log('Current hero index:', currentHeroIndex);
-                console.log('Current displayed movie:', currentDisplayedMovie);
+                console.log('Current displayed movie:', currentDisplayedMovie?.title);
 
                 const currentMovie = getCurrentDisplayedMovie();
 
@@ -3386,17 +3407,18 @@
                     showDetails(currentMovie.id);
                 } else {
                     console.error('Current movie or movie ID is missing');
-                    console.log('Available movies:', heroMovies);
-                    alert('Movie information not available. Please wait for content to load.');
+                    console.log('Available movies:', heroMovies.length);
+                    console.log('Current displayed movie:', currentDisplayedMovie);
+                    alert('Movie information not available. Please wait for content to load or refresh the page.');
                 }
             });
 
             // Start Watching button - play current hero movie
             startWatchingBtn.addEventListener('click', () => {
                 console.log('Start Watching button clicked');
-                console.log('Hero movies:', heroMovies);
+                console.log('Hero movies:', heroMovies.length);
                 console.log('Current hero index:', currentHeroIndex);
-                console.log('Current displayed movie:', currentDisplayedMovie);
+                console.log('Current displayed movie:', currentDisplayedMovie?.title);
 
                 const currentMovie = getCurrentDisplayedMovie();
 
@@ -3407,8 +3429,9 @@
                     playVideo(currentMovie);
                 } else {
                     console.error('Current movie or movie ID is missing');
-                    console.log('Available movies:', heroMovies);
-                    alert('Movie information not available. Please wait for content to load.');
+                    console.log('Available movies:', heroMovies.length);
+                    console.log('Current displayed movie:', currentDisplayedMovie);
+                    alert('Movie information not available. Please wait for content to load or refresh the page.');
                 }
             });
         }
@@ -4133,19 +4156,23 @@
                 console.log('Fetching hero movies...');
                 const response = await fetch(`${API_URL}/movie/popular?page=1`);
                 const data = await response.json();
-                heroMovies = data.results.slice(0, 10);
-                currentHeroIndex = 0; // Reset index when new movies are loaded
+                const newHeroMovies = data.results.slice(0, 10);
 
-                // Set the current displayed movie
-                if (heroMovies.length > 0) {
+                if (newHeroMovies.length > 0) {
+                    heroMovies = newHeroMovies;
+                    currentHeroIndex = 0; // Reset index when new movies are loaded
+
+                    // Set the current displayed movie
                     currentDisplayedMovie = heroMovies[0];
+
+                    console.log('Hero movies loaded:', heroMovies.length);
+                    console.log('Current displayed movie set to:', currentDisplayedMovie?.title, 'ID:', currentDisplayedMovie?.id);
+
+                    // Restart slideshow with new movies
+                    restartHeroSlideshow();
+                } else {
+                    console.warn('No hero movies received from API');
                 }
-
-                console.log('Hero movies loaded:', heroMovies.length);
-                console.log('Current displayed movie set to:', currentDisplayedMovie?.title);
-
-                // Restart slideshow with new movies
-                restartHeroSlideshow();
             } catch (error) {
                 console.error('Error fetching hero movies:', error);
             }
@@ -4161,10 +4188,10 @@
             const backdropPath = movie.backdrop_path;
             const backdrop = backdropPath ? `https://image.tmdb.org/t/p/original${backdropPath}` : 'https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg';
 
-            // Set the current displayed movie for button synchronization
+            // Set the current displayed movie for button synchronization BEFORE updating display
             currentDisplayedMovie = movie;
 
-            console.log('Updating hero to:', title, 'Index:', currentHeroIndex);
+            console.log('Updating hero to:', title, 'Index:', currentHeroIndex, 'Movie ID:', movie.id);
 
             // Add fade effect
             const heroElement = document.querySelector('.hero');
@@ -4180,6 +4207,7 @@
                 updateHeroStatus(movie);
             }, 300);
 
+            // Update index AFTER setting currentDisplayedMovie
             currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
         }
 
@@ -4240,23 +4268,38 @@
         function getCurrentDisplayedMovie() {
             if (heroMovies.length === 0) return null;
 
-            // Ensure currentHeroIndex is within bounds
-            const safeIndex = currentHeroIndex % heroMovies.length;
-            if (safeIndex < 0) {
-                currentHeroIndex = 0;
+            // The currentDisplayedMovie should already be set correctly by updateHero()
+            // But let's ensure it's valid and matches the hero display
+            if (currentDisplayedMovie && heroMovies.some(movie => movie.id === currentDisplayedMovie.id)) {
+                console.log('Current displayed movie:', currentDisplayedMovie.title, 'ID:', currentDisplayedMovie.id);
+                return currentDisplayedMovie;
             }
 
-            currentDisplayedMovie = heroMovies[safeIndex];
-            return currentDisplayedMovie;
+            // Fallback: if currentDisplayedMovie is not valid, use the first movie
+            if (heroMovies.length > 0) {
+                currentDisplayedMovie = heroMovies[0];
+                console.log('Fallback: Using first hero movie:', currentDisplayedMovie.title, 'ID:', currentDisplayedMovie.id);
+                return currentDisplayedMovie;
+            }
+
+            return null;
         }
 
         // Function to restart slideshow (useful if movies are reloaded)
         function restartHeroSlideshow() {
+            console.log('Restarting hero slideshow...');
             if (slideshowInterval) {
                 clearInterval(slideshowInterval);
+                slideshowInterval = null;
             }
             if (heroMovies.length > 1) {
+                console.log('Starting slideshow with', heroMovies.length, 'movies');
                 startHeroSlideshow();
+            } else if (heroMovies.length === 1) {
+                console.log('Only one hero movie available, displaying static');
+                updateHero(); // Show the single movie
+            } else {
+                console.warn('No hero movies available for slideshow');
             }
         }
 
