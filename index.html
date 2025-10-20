@@ -2433,11 +2433,11 @@
     <header>
         <nav class="navbar">
             <div class="logo">
-                <h1><i class="fas fa-play-circle"></i> StreamFlix</h1>
+                <h1><i class="fas fa-play-circle" aria-hidden="true"></i> StreamFlix</h1>
             </div>
             <div class="search-container">
                 <input type="text" class="search-box" id="searchInput" placeholder="🔍 Search movies, TV shows, actors, genres...">
-                <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
+                <button class="search-btn" id="searchBtn"><i class="fas fa-search" aria-hidden="true"></i> Search</button>
             </div>
         </nav>
     </header>
@@ -2448,28 +2448,58 @@
                 <h2 id="heroTitle">Unlimited Entertainment</h2>
                 <p id="heroDesc">Stream thousands of movies and TV shows in HD quality. Anytime, anywhere.</p>
                 <div class="hero-btns">
-                    <button class="btn btn-primary" id="startWatchingBtn"><i class="fas fa-play"></i> Start Watching</button>
-                    <button class="btn btn-secondary" id="moreInfoBtn"><i class="fas fa-info-circle"></i> More Info</button>
+                    <button class="btn btn-primary" id="startWatchingBtn"><i class="fas fa-play" aria-hidden="true"></i> Start Watching</button>
+                    <button class="btn btn-secondary" id="moreInfoBtn"><i class="fas fa-info-circle" aria-hidden="true"></i> More Info</button>
                 </div>
                 <div class="hero-status" id="heroStatus"></div>
             </div>
         </section>
 
-        <div class="mode-toggle">
-            <button class="mode-btn active" id="movieMode">Movies</button>
-            <button class="mode-btn" id="tvMode">TV Shows</button>
-        </div>
-
-        <h2 class="section-title"><i class="fas fa-fire"></i> Popular Now</h2>
         <div class="main-content">
-            <div class="content-grid" id="contentGrid">
-                <!-- Content will be loaded here -->
-            </div>
-        </div>
+            <aside class="categories-sidebar">
+                <div class="categories-header">
+                    <h3><i class="fas fa-compass" aria-hidden="true"></i> Explore</h3>
+                </div>
 
-        <div class="loading" id="loading">
-            <div class="loading-spinner"></div>
-            <p>Loading content...</p>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="movieMode">Movies</button>
+                    <button class="mode-btn" id="tvMode">TV Shows</button>
+                </div>
+
+                <div class="categories-section">
+                    <h4><i class="fas fa-film" aria-hidden="true"></i> Movie Genres</h4>
+                    <div class="category-list" id="movieCategories">
+                        <!-- Movie categories will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="categories-section">
+                    <h4><i class="fas fa-tv" aria-hidden="true"></i> TV Show Genres</h4>
+                    <div class="category-list" id="tvCategories">
+                        <!-- TV categories will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="categories-section">
+                    <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> By Year</h4>
+                    <div class="year-list" id="yearCategories">
+                        <!-- Year categories will be loaded here -->
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content-grid-wrapper" style="flex: 1;">
+                <h2 class="section-title"><i class="fas fa-fire" aria-hidden="true"></i> Popular Now</h2>
+
+                <div class="content-grid" id="contentGrid">
+                    <!-- Content will be loaded here -->
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading content...</p>
+                </div>
+            </main>
         </div>
 
         <button class="btn btn-secondary" id="loadMore" style="display: none; margin: 0 auto;">Load More</button>
@@ -2499,8 +2529,8 @@
                     <div class="modal-overview">
                         <h3>Overview</h3>
                         <p id="modalOverview">No overview available.</p>
-                        <button class="watch-btn" id="watchBtn"><i class="fas fa-play"></i> Watch Now</button>
-                        <button class="trailer-btn" id="trailerBtn" style="display: none;"><i class="fas fa-film"></i> Watch Trailer</button>
+                        <button class="watch-btn" id="watchBtn"><i class="fas fa-play" aria-hidden="true"></i> Watch Now</button>
+                        <button class="trailer-btn" id="trailerBtn" style="display: none;"><i class="fas fa-film" aria-hidden="true"></i> Watch Trailer</button>
                     </div>
                 </div>
             </div>
@@ -2516,7 +2546,7 @@
                 <h3 class="trailer-title" id="trailerTitle">Trailer</h3>
                 <button class="close-trailer" id="closeTrailer">&times;</button>
             </div>
-            <iframe class="trailer-video" id="trailerVideo" src="" allowfullscreen></iframe>
+            <iframe class="trailer-video" id="trailerVideo" src="" allow="fullscreen"></iframe>
         </div>
     </div>
 
@@ -2531,7 +2561,6 @@
         let isFetching = false;
         let currentMode = 'movie';
         let currentItem = null;
-        let heroMovies = [];
         let currentHeroIndex = 0;
 
         // Initialize filter state variables
@@ -2566,6 +2595,11 @@
         const startWatchingBtn = document.getElementById('startWatchingBtn');
         const moreInfoBtn = document.getElementById('moreInfoBtn');
 
+        // Hero slideshow state
+        let heroMovies = [];
+        let slideshowInterval = null;
+        let isPaused = false;
+
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             fetchContent();
@@ -2581,19 +2615,14 @@
             // Start the slideshow after hero movies are loaded with proper delay
             const startSlideshow = () => {
                 if (heroMovies.length > 0) {
-                    console.log('Starting hero slideshow with', heroMovies.length, 'movies');
                     startHeroSlideshow();
                 } else {
-                    console.log('No hero movies available, retrying in 1 second...');
                     setTimeout(startSlideshow, 1000);
                 }
             };
 
             // Wait for hero movies to load before starting slideshow
             setTimeout(startSlideshow, 2000);
-
-            // Add debugging for cast/crew loading
-            console.log('StreamFlix initialized with cast/crew support');
 
             // Add a function to refresh all cast information
             window.refreshAllCastInfo = refreshAllCastInfo;
@@ -2625,13 +2654,12 @@
                 },
                 resetIndex: () => {
                     currentHeroIndex = 0;
-                    if (heroMovies.length > 0) {
-                        currentDisplayedMovie = heroMovies[0];
-                    }
+                    currentDisplayedMovie = heroMovies.length > 0 ? heroMovies[0] : null;
                     console.log('Hero index reset to 0');
                 },
                 testButtons: () => {
                     console.log('Testing hero buttons...');
+                    // This is a reference to a function that is defined later in the code
                     const currentMovie = getCurrentDisplayedMovie();
                     if (currentMovie) {
                         console.log('✅ More Info button should show details for:', currentMovie.title);
@@ -2643,9 +2671,6 @@
                 }
             };
 
-            console.log('Debug commands available:');
-            console.log('- debugCast.refreshAll(), debugCast.testData(), debugCast.checkAPI()');
-            console.log('- debugHero.sync(), debugHero.refresh(), debugHero.getCurrent(), debugHero.checkState()');
         });
 
         // Initialize enhanced image loading system
@@ -2754,7 +2779,7 @@
                     if (watchBtn && watchBtn.getAttribute('data-item-id') == itemId) {
                         const item = {
                             id: parseInt(itemId),
-                            type: card.querySelector('.type-badge')?.textContent === 'TV Show' ? 'tv' : 'movie'
+                            type: (card.querySelector('.type-badge')?.textContent === 'TV Show') ? 'tv' : 'movie'
                         };
 
                         if (item.id && item.type) {
@@ -2762,7 +2787,7 @@
                             // Reset the container
                             container.innerHTML = `
                                 <div class="cast-loading" style="display: flex; align-items: center; gap: 8px; color: #999; font-size: 0.75rem;">
-                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
                                     <span>Loading cast & crew...</span>
                                 </div>
                             `;
@@ -2777,30 +2802,30 @@
         // Load and populate categories
         async function loadCategories() {
             try {
-                console.log('Loading categories...');
-                const [movieResponse, tvResponse] = await Promise.all([
-                    fetch(`${API_URL}/movie/popular?page=1`),
-                    fetch(`${API_URL}/tv/popular?page=1`)
+                const [movieGenresRes, tvGenresRes, popularMoviesRes, popularTvsRes] = await Promise.all([
+                    fetch(`${API_URL}/genre/movie/list`),
+                    fetch(`${API_URL}/genre/tv/list`),
+                    fetch(`${API_URL}/movie/popular?page=1`), // For year population
+                    fetch(`${API_URL}/tv/popular?page=1`)      // For year population
                 ]);
 
-                const [movieData, tvData] = await Promise.all([
-                    movieResponse.json(),
-                    tvResponse.json()
+                const [movieGenresData, tvGenresData, popularMoviesData, popularTvsData] = await Promise.all([
+                    movieGenresRes.json(),
+                    tvGenresRes.json(),
+                    popularMoviesRes.json(),
+                    popularTvsRes.json()
                 ]);
 
-                console.log('Categories data loaded:', {
-                    movies: movieData.results.length,
-                    tvShows: tvData.results.length
-                });
+                if (movieGenresData.genres) {
+                    populateMovieCategories(movieGenresData.genres);
+                }
+                if (tvGenresData.genres) {
+                    populateTVCategories(tvGenresData.genres);
+                }
 
-                populateMovieCategories(movieData.results);
-                populateTVCategories(tvData.results);
-                populateYearCategories([...movieData.results, ...tvData.results]);
+                populateYearCategories([...popularMoviesData.results, ...popularTvsData.results]);
 
-                // Attach event listeners after categories are populated
-                setTimeout(() => {
-                    attachCategoryEventListeners();
-                }, 500);
+                attachCategoryEventListeners();
 
                 console.log('Categories populated successfully');
 
@@ -2809,120 +2834,54 @@
             }
         }
 
-        function populateMovieCategories(movies) {
+        function populateMovieCategories(genres) {
             const container = document.getElementById('movieCategories');
             if (!container) return;
 
-            // Get unique genres from movies
-            const genres = new Map();
-
-            movies.forEach(movie => {
-                if (movie.genre_ids && movie.genre_ids.length > 0) {
-                    movie.genre_ids.forEach(genreId => {
-                        if (!genres.has(genreId)) {
-                            genres.set(genreId, { id: genreId, count: 0, movies: [] });
-                        }
-                        genres.get(genreId).count++;
-                        genres.get(genreId).movies.push(movie);
-                    });
-                }
-            });
-
-            // Convert genre IDs to names (common movie genres)
-            const genreNames = {
-                28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy',
-                80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family',
-                14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music',
-                9648: 'Mystery', 10749: 'Romance', 878: 'Science Fiction',
-                10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
-            };
-
             container.innerHTML = '';
 
-            Array.from(genres.entries())
-                .sort((a, b) => b[1].count - a[1].count)
-                .slice(0, 12) // Show top 12 genres
-                .forEach(([genreId, data]) => {
-                    const genreName = genreNames[genreId] || `Genre ${genreId}`;
-                    const categoryItem = document.createElement('div');
-                    categoryItem.className = 'category-item';
-                    categoryItem.setAttribute('data-genre-id', genreId);
-                    categoryItem.setAttribute('data-genre-type', 'movie');
-                    categoryItem.innerHTML = `
-                        <span>${genreName}</span>
-                        <span class="category-count">${data.count}</span>
-                    `;
+            genres.forEach(genre => {
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.setAttribute('data-genre-id', genre.id);
+                categoryItem.setAttribute('data-genre-type', 'movie');
+                categoryItem.innerHTML = `<span>${genre.name}</span>`;
 
-                    // Add click event listener with proper context
-                    categoryItem.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const clickedGenreId = this.getAttribute('data-genre-id');
-                        const clickedType = this.getAttribute('data-genre-type');
-                        console.log('Movie category clicked:', genreName, 'ID:', clickedGenreId);
-                        filterByGenre(parseInt(clickedGenreId), clickedType, e);
-                    });
-
-                    container.appendChild(categoryItem);
+                categoryItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const clickedGenreId = this.getAttribute('data-genre-id');
+                    const clickedType = this.getAttribute('data-genre-type');
+                    filterByGenre(parseInt(clickedGenreId), clickedType, e);
                 });
+
+                container.appendChild(categoryItem);
+            });
         }
 
-        function populateTVCategories(tvShows) {
+        function populateTVCategories(genres) {
             const container = document.getElementById('tvCategories');
             if (!container) return;
 
-            // Get unique genres from TV shows
-            const genres = new Map();
-
-            tvShows.forEach(show => {
-                if (show.genre_ids && show.genre_ids.length > 0) {
-                    show.genre_ids.forEach(genreId => {
-                        if (!genres.has(genreId)) {
-                            genres.set(genreId, { id: genreId, count: 0, shows: [] });
-                        }
-                        genres.get(genreId).count++;
-                        genres.get(genreId).shows.push(show);
-                    });
-                }
-            });
-
-            // Convert genre IDs to names (common TV genres)
-            const genreNames = {
-                10759: 'Action & Adventure', 16: 'Animation', 35: 'Comedy',
-                80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family',
-                10762: 'Kids', 9648: 'Mystery', 10763: 'News', 10764: 'Reality',
-                10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk',
-                10768: 'War & Politics', 37: 'Western'
-            };
-
             container.innerHTML = '';
 
-            Array.from(genres.entries())
-                .sort((a, b) => b[1].count - a[1].count)
-                .slice(0, 12) // Show top 12 genres
-                .forEach(([genreId, data]) => {
-                    const genreName = genreNames[genreId] || `Genre ${genreId}`;
-                    const categoryItem = document.createElement('div');
-                    categoryItem.className = 'category-item';
-                    categoryItem.setAttribute('data-genre-id', genreId);
-                    categoryItem.setAttribute('data-genre-type', 'tv');
-                    categoryItem.innerHTML = `
-                        <span>${genreName}</span>
-                        <span class="category-count">${data.count}</span>
-                    `;
+            genres.forEach(genre => {
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.setAttribute('data-genre-id', genre.id);
+                categoryItem.setAttribute('data-genre-type', 'tv');
+                categoryItem.innerHTML = `<span>${genre.name}</span>`;
 
-                    // Add click event listener with proper context
-                    categoryItem.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const clickedGenreId = this.getAttribute('data-genre-id');
-                        const clickedType = this.getAttribute('data-genre-type');
-                        console.log('TV category clicked:', genreName, 'ID:', clickedGenreId);
-                        filterByGenre(parseInt(clickedGenreId), clickedType, e);
-                    });
-
-                    container.appendChild(categoryItem);
+                categoryItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const clickedGenreId = this.getAttribute('data-genre-id');
+                    const clickedType = this.getAttribute('data-genre-type');
+                    filterByGenre(parseInt(clickedGenreId), clickedType, e);
                 });
+
+                container.appendChild(categoryItem);
+            });
         }
 
         function populateYearCategories(items) {
@@ -2993,7 +2952,7 @@
         // Clear the main content grid before displaying new results
         contentGrid.innerHTML = '';
 
-        function filterByYear(year, event) {
+        function filterByYear(year, event = null) {
             console.log('Filtering by year:', year);
 
             // Remove active class from all years
@@ -3001,7 +2960,7 @@
                 item.classList.remove('active');
             });
             
-            // Add active class to clicked year
+            // Add active class to clicked year if event is provided
             if (event && event.target) {
                 const clickedItem = event.target.closest('.year-item');
                 if (clickedItem) {
@@ -3045,7 +3004,7 @@
                 if (!data.results || data.results.length === 0) {
                     console.warn('No results returned from API for genre filter');
                     contentGrid.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc;">
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
                             <i class="fas fa-search" style="font-size: 64px; color: var(--primary); margin-bottom: 30px;"></i>
                             <h3 style="font-size: 1.5rem; margin-bottom: 15px;">No ${type === 'movie' ? 'movies' : 'TV shows'} found</h3>
                             <p style="font-size: 1.1rem;">This genre might not have content available at the moment.</p>
@@ -3065,11 +3024,11 @@
 
                 // Show a more user-friendly error message
                 contentGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: var(--accent); margin-bottom: 30px;"></i>
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: var(--accent); margin-bottom: 30px;" aria-hidden="true"></i>
                         <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Unable to filter by genre</h3>
                         <p style="font-size: 1.1rem; margin-bottom: 20px;">${error.message}</p>
-                        <button onclick="retryLastAction()" style="background: var(--primary); color: var(--secondary); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Try Again</button>
+                        <button onclick="retryLastAction()" class="btn btn-primary">Try Again</button>
                     </div>
                 `;
                 updateSearchResultsCounter(0);
@@ -3129,7 +3088,7 @@
 
             // Add refresh cast info button (hidden by default, can be enabled for debugging)
             const refreshBtn = document.createElement('button');
-            refreshBtn.innerHTML = '<i class="fas fa-sync"></i> Refresh Cast Info';
+            refreshBtn.innerHTML = '<i class="fas fa-sync" aria-hidden="true"></i> Refresh Cast Info';
             refreshBtn.style.cssText = `
                 position: fixed;
                 bottom: 20px;
@@ -3402,10 +3361,10 @@
                 const currentMovie = getCurrentDisplayedMovie();
 
                 if (currentMovie && currentMovie.id) {
-                    console.log('Showing details for movie:', currentMovie.title, 'ID:', currentMovie.id);
                     currentMode = 'movie'; // Set mode to movie for hero content
                     showDetails(currentMovie.id);
                 } else {
+                    // This is a reference to a variable that is defined later in the code
                     console.error('Current movie or movie ID is missing');
                     console.log('Available movies:', heroMovies.length);
                     console.log('Current displayed movie:', currentDisplayedMovie);
@@ -3423,7 +3382,6 @@
                 const currentMovie = getCurrentDisplayedMovie();
 
                 if (currentMovie && currentMovie.id) {
-                    console.log('Playing movie:', currentMovie.title, 'ID:', currentMovie.id);
                     currentMode = 'movie'; // Set mode to movie for hero content
                     currentItem = currentMovie;
                     playVideo(currentMovie);
@@ -3854,7 +3812,7 @@
             if (results.length > 0) {
                 resultsContainer.innerHTML = `
                     <div class="live-results-header" style="padding: 15px; border-bottom: 1px solid rgba(0,255,157,0.2); color: var(--primary); font-weight: bold;">
-                        <i class="fas fa-search"></i> Search Results (${results.length})
+                        <i class="fas fa-search" aria-hidden="true"></i> Search Results (${results.length})
                     </div>
                     <div class="live-results-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 15px;">
                         ${results.map(item => createLiveResultCard(item, query)).join('')}
@@ -3864,7 +3822,7 @@
             } else {
                 resultsContainer.innerHTML = `
                     <div class="no-live-results" style="padding: 30px; text-align: center; color: #ccc;">
-                        <i class="fas fa-search" style="font-size: 32px; color: var(--primary); margin-bottom: 15px;"></i>
+                        <i class="fas fa-search" style="font-size: 32px; color: var(--primary); margin-bottom: 15px;" aria-hidden="true"></i>
                         <p>No results found for "${query}"</p>
                         <small>Try different keywords or check spelling</small>
                     </div>
@@ -3895,7 +3853,7 @@
                             <span style="background: rgba(255,46,99,0.2); color: var(--accent); padding: 2px 6px; border-radius: 8px; font-size: 0.7rem;">${type}</span>
                         </div>
                         <div style="color: #ffd700; font-size: 0.8rem;">
-                            <i class="fas fa-star"></i> ${rating}
+                            <i class="fas fa-star" aria-hidden="true"></i> ${rating}
                         </div>
                         ${item.overview ? `<p style="color: #ccc; font-size: 0.75rem; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${highlightSearchTerm(item.overview.substring(0, 80), query)}...</p>` : ''}
                     </div>
@@ -3946,7 +3904,7 @@
             if (suggestions.length > 0) {
                 suggestionsContainer.innerHTML = suggestions.map(suggestion => `
                     <div class="search-suggestion" onclick="selectSuggestion('${suggestion.replace(/'/g, "\\'")}')">
-                        <i class="fas fa-search"></i> ${highlightSearchTerm(suggestion, searchTerm)}
+                        <i class="fas fa-search" aria-hidden="true"></i> ${highlightSearchTerm(suggestion, searchTerm)}
                     </div>
                 `).join('');
                 suggestionsContainer.style.display = 'block';
@@ -4081,14 +4039,14 @@
                 counter = document.createElement('div');
                 counter.id = 'searchResultsCounter';
                 counter.className = 'search-results-counter';
-                document.querySelector('.container').insertBefore(counter, document.querySelector('.content-grid'));
+                document.querySelector('.content-grid-wrapper').insertBefore(counter, document.querySelector('.content-grid'));
             }
 
             if (currentQuery) {
                 const itemText = resultCount === 1 ? 'result' : 'results';
                 counter.innerHTML = `
                     <div style="background: var(--dark); padding: 15px 25px; margin-bottom: 25px; border-radius: 10px; border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
-                        <i class="fas fa-search" style="color: var(--primary); margin-right: 10px;"></i>
+                        <i class="fas fa-search" style="color: var(--primary); margin-right: 10px;" aria-hidden="true"></i>
                         Found <strong>${resultCount}</strong> ${itemText}
                         for <strong>"${currentQuery}"</strong>
                     </div>
@@ -4153,20 +4111,17 @@
         // Fetch hero movies
         async function fetchHeroMovies() {
             try {
-                console.log('Fetching hero movies...');
                 const response = await fetch(`${API_URL}/movie/popular?page=1`);
                 const data = await response.json();
                 const newHeroMovies = data.results.slice(0, 10);
 
                 if (newHeroMovies.length > 0) {
                     heroMovies = newHeroMovies;
-                    currentHeroIndex = 0; // Reset index when new movies are loaded
-
-                    // Set the current displayed movie
-                    currentDisplayedMovie = heroMovies[0];
-
-                    console.log('Hero movies loaded:', heroMovies.length);
-                    console.log('Current displayed movie set to:', currentDisplayedMovie?.title, 'ID:', currentDisplayedMovie?.id);
+                    // Don't reset index here, let the slideshow loop naturally.
+                    // If the slideshow isn't running, restartHeroSlideshow will handle it.
+                    if (!slideshowInterval) {
+                        currentHeroIndex = 0;
+                    }
 
                     // Restart slideshow with new movies
                     restartHeroSlideshow();
@@ -4179,6 +4134,9 @@
         }
 
         // Update hero section
+        // This variable is used to ensure button clicks correspond to the displayed movie
+        let currentDisplayedMovie = null;
+
         function updateHero() {
             if (heroMovies.length === 0) return;
 
@@ -4188,10 +4146,8 @@
             const backdropPath = movie.backdrop_path;
             const backdrop = backdropPath ? `https://image.tmdb.org/t/p/original${backdropPath}` : 'https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg';
 
-            // Set the current displayed movie for button synchronization BEFORE updating display
+            // Set the current displayed movie for button synchronization
             currentDisplayedMovie = movie;
-
-            console.log('Updating hero to:', title, 'Index:', currentHeroIndex, 'Movie ID:', movie.id);
 
             // Add fade effect
             const heroElement = document.querySelector('.hero');
@@ -4207,7 +4163,7 @@
                 updateHeroStatus(movie);
             }, 300);
 
-            // Update index AFTER setting currentDisplayedMovie
+            // Update index for the *next* slide
             currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
         }
 
@@ -4219,27 +4175,19 @@
                 const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '';
 
                 statusElement.innerHTML = `
-                    <i class="fas fa-film"></i>
+                    <i class="fas fa-film" aria-hidden="true"></i>
                     Now Showing: <strong>${movie.title}</strong>
                     ${year ? `<span class="year-badge">${year}</span>` : ''}
-                    ${rating ? `<span class="rating-badge"><i class="fas fa-star"></i> ${rating}</span>` : ''}
+                    ${rating ? `<span class="rating-badge"><i class="fas fa-star" aria-hidden="true"></i> ${rating}</span>` : ''}
                 `;
             }
         }
 
-        // Slideshow state
-        let slideshowInterval = null;
-        let isPaused = false;
-        let currentDisplayedMovie = null;
-
         // Start hero slideshow
         function startHeroSlideshow() {
             if (heroMovies.length <= 1) {
-                console.log('Not enough hero movies for slideshow');
                 return;
             }
-
-            console.log('Starting hero slideshow with', heroMovies.length, 'movies');
 
             // Update hero every 8 seconds
             slideshowInterval = setInterval(() => {
@@ -4267,22 +4215,12 @@
         // Get the currently displayed movie (safe method)
         function getCurrentDisplayedMovie() {
             if (heroMovies.length === 0) return null;
-
-            // The currentDisplayedMovie should already be set correctly by updateHero()
-            // But let's ensure it's valid and matches the hero display
-            if (currentDisplayedMovie && heroMovies.some(movie => movie.id === currentDisplayedMovie.id)) {
-                console.log('Current displayed movie:', currentDisplayedMovie.title, 'ID:', currentDisplayedMovie.id);
-                return currentDisplayedMovie;
-            }
-
-            // Fallback: if currentDisplayedMovie is not valid, use the first movie
-            if (heroMovies.length > 0) {
-                currentDisplayedMovie = heroMovies[0];
-                console.log('Fallback: Using first hero movie:', currentDisplayedMovie.title, 'ID:', currentDisplayedMovie.id);
-                return currentDisplayedMovie;
-            }
-
-            return null;
+            // currentDisplayedMovie is reliably set by updateHero().
+            // If it's null (e.g., on first load before updateHero runs),
+            // we can safely fall back to the movie at the *previous* index,
+            // which is what would be displayed.
+            const displayedIndex = (currentHeroIndex - 1 + heroMovies.length) % heroMovies.length;
+            return currentDisplayedMovie || heroMovies[displayedIndex];
         }
 
         // Function to restart slideshow (useful if movies are reloaded)
@@ -4293,7 +4231,6 @@
                 slideshowInterval = null;
             }
             if (heroMovies.length > 1) {
-                console.log('Starting slideshow with', heroMovies.length, 'movies');
                 startHeroSlideshow();
             } else if (heroMovies.length === 1) {
                 console.log('Only one hero movie available, displaying static');
@@ -4342,9 +4279,9 @@
         function displayContent(items) {
             if (items.length === 0) {
                 const searchTerm = searchInput.value.trim();
-                contentGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc;">
-                        <i class="fas fa-search" style="font-size: 64px; color: var(--primary); margin-bottom: 30px;"></i>
+                contentGrid.innerHTML = ` 
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
+                        <i class="fas fa-search" style="font-size: 64px; color: var(--primary); margin-bottom: 30px;" aria-hidden="true"></i>
                         <h3 style="font-size: 1.5rem; margin-bottom: 15px;">No results found</h3>
                         <p style="font-size: 1.1rem; margin-bottom: 20px;">
                             ${searchTerm ? `Try searching for something else or check your spelling.` : 'No content available at the moment.'}
@@ -4378,18 +4315,18 @@
                         <h3 class="card-title">${highlightedTitle}</h3>
                         <div class="card-info">
                             <span class="year-badge">${year}</span>
-                            <span class="rating-badge"><i class="fas fa-star"></i> ${rating}</span>
+                            <span class="rating-badge"><i class="fas fa-star" aria-hidden="true"></i> ${rating}</span>
                             <span class="type-badge">${type}</span>
                         </div>
                         ${item.overview ? `<p class="card-overview">${truncateText(highlightSearchTerm(item.overview, searchTerm), 120)}</p>` : ''}
                         <div class="card-cast" id="cast-${item.id}" style="margin-top: 10px; min-height: 40px;">
                             <div class="cast-loading" style="display: flex; align-items: center; gap: 8px; color: #999; font-size: 0.75rem;">
-                                <i class="fas fa-spinner fa-spin"></i>
+                                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
                                 <span>Loading cast & crew...</span>
                             </div>
                         </div>
                         <button class="watch-btn-card" data-item-id="${item.id}">
-                            <i class="fas fa-play"></i> Watch Now
+                            <i class="fas fa-play" aria-hidden="true"></i> Watch Now
                         </button>
                     </div>
                 `;
@@ -4474,15 +4411,15 @@
                 castContainer.innerHTML = `
                     <div class="cast-info">
                         ${director ? `<div class="director-info">
-                            <div class="director-badge">
-                                <i class="fas fa-crown"></i>
+                            <div class="director-badge"> 
+                                <i class="fas fa-crown" aria-hidden="true"></i>
                                 <span>${director.name}</span>
                             </div>
                         </div>` : ''}
                         <div class="cast-members">
                             <div class="cast-label">
-                                <i class="fas fa-users"></i>
-                                <span>Cast</span>
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                                <span>Cast</span> 
                             </div>
                             ${topCast.map((actor, index) => `
                                 <div class="cast-member">
@@ -4664,12 +4601,12 @@
                 const director = creditsData.crew ? creditsData.crew.find(person => person.job === 'Director') : null;
                 const topCast = creditsData.cast.slice(0, 6); // Show top 6 cast members
 
-                console.log('Director:', director);
+                console.log('Director found for modal:', director);
                 console.log('Top cast:', topCast);
 
                 castInfoDiv.innerHTML = `
-                    <div class="director-section">
-                        <h3><i class="fas fa-crown"></i> Director</h3>
+                    <div class="director-section"> 
+                        <h3><i class="fas fa-crown" aria-hidden="true"></i> Director</h3>
                         ${director ? `
                             <div class="director-card">
                                 <div class="director-profile">
@@ -4687,8 +4624,8 @@
                         ` : '<p style="color: #999; font-style: italic; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center;">Director information not available.</p>'}
                     </div>
 
-                    <div class="cast-section">
-                        <h3><i class="fas fa-users"></i> Top Cast</h3>
+                    <div class="cast-section"> 
+                        <h3><i class="fas fa-users" aria-hidden="true"></i> Top Cast</h3>
                         <div class="cast-grid">
                             ${topCast.map(actor => `
                                 <div class="cast-card">
@@ -4734,28 +4671,30 @@
                             <div class="video-header">
                                 <div class="video-title" id="videoTitle">Now Playing</div>
                                 <div class="provider-buttons" id="providerButtons">
-                                    <button class="provider-btn-small" data-provider="vidsrc">Alpha</button>
-                                    <button class="provider-btn-small" data-provider="vidsrc.to">Bravo</button>
-                                    <button class="provider-btn-small" data-provider="vidlink">Charlie</button>
-                                    <button class="provider-btn-small" data-provider="vidplus.to">Delta</button>
-                                    <button class="provider-btn-small" data-provider="vixsrc.to">Echo</button>
-                                    <button class="provider-btn-small" data-provider="111movies">Foxtrot</button>
-                                    <button class="provider-btn-small" data-provider="autoembed.pro">Golf</button>
-                                    <button class="provider-btn-small" data-provider="moviemaze.cc">Hotel</button>
-                                    <button class="provider-btn-small" data-provider="videasy">India</button>
-                                    <button class="provider-btn-small" data-provider="vidfast">Juliet</button>
-                                    <button class="provider-btn-small" data-provider="vidking.net">Kilo</button>
-                                    <button class="provider-btn-small" data-provider="vidora.su">Lima</button>
+                                    <button class="provider-btn-small" data-provider="alpha">Alpha</button>
+                                    <button class="provider-btn-small" data-provider="bravo">Bravo</button>
+                                    <button class="provider-btn-small" data-provider="charlie">Charlie</button>
+                                    <button class="provider-btn-small" data-provider="delta">Delta</button>
+                                    <button class="provider-btn-small" data-provider="echo">Echo</button>
+                                    <button class="provider-btn-small" data-provider="foxtrot">Foxtrot</button>
+                                    <button class="provider-btn-small" data-provider="golf">Golf</button>
+                                    <button class="provider-btn-small" data-provider="hotel">Hotel</button>
+                                    <button class="provider-btn-small" data-provider="india">India</button>
+                                    <button class="provider-btn-small" data-provider="juliet">Juliet</button>
+                                    <button class="provider-btn-small" data-provider="kilo">Kilo</button>
+                                    <button class="provider-btn-small" data-provider="lima">Lima</button>
+                                    <button class="provider-btn-small" data-provider="mike">Mike</button>
+                                    <button class="provider-btn-small" data-provider="november">November (4K)</button>
                                 </div>
                                 <div class="video-quality">HD</div>
                                 <button class="close-video" id="closeVideo">&times;</button>
                             </div>
                             <div class="video-player">
                                 <div class="video-loading" id="videoLoading">
-                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
                                     <span>Loading stream...</span>
                                 </div>
-                                <iframe class="stream-iframe" id="streamIframe" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"
+                                <iframe class="stream-iframe" id="streamIframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                                     referrerpolicy="strict-origin-when-cross-origin">
                                 </iframe>
                                 <div class="player-controls" id="playerControls">
@@ -4766,8 +4705,8 @@
                                         <div class="progress-container" id="progressContainer">
                                             <div class="progress-bar" id="progressBar"></div>
                                         </div>
-                                        <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
-                                        <button class="next-episode-btn" id="nextEpisodeBtn"><i class="fas fa-step-forward"></i></button>
+                                        <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand" aria-hidden="true"></i></button>
+                                        <button class="next-episode-btn" id="nextEpisodeBtn"><i class="fas fa-step-forward" aria-hidden="true"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -5011,13 +4950,6 @@
                 trendingItems: trendingItems.length
             });
         }
-
-        // Call this after categories are loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                attachCategoryEventListeners();
-            }, 1500);
-        });
 
         function handleTrendingClick(e) {
             e.preventDefault();
