@@ -2976,6 +2976,9 @@
             // Store the last action for retry functionality
             window.lastGenreFilter = { genreId, type };
 
+            // Clear the grid immediately for better UX
+            contentGrid.innerHTML = '';
+
             // Set the current mode to match the filter type
             currentMode = type;
 
@@ -3074,18 +3077,6 @@
 
         function addSearchEnhancements() {
             // Add search hint
-            const searchContainer = document.querySelector('.search-container');
-            const hint = document.createElement('small');
-            hint.textContent = '💡 Tip: Try searching for movie titles, actors, or genres!';
-            hint.style.cssText = `
-                display: block;
-                color: rgba(255,255,255,0.6);
-                font-size: 0.8rem;
-                margin-top: 8px;
-                text-align: center;
-            `;
-            searchContainer.appendChild(hint);
-
             // Add refresh cast info button (hidden by default, can be enabled for debugging)
             const refreshBtn = document.createElement('button');
             refreshBtn.innerHTML = '<i class="fas fa-sync" aria-hidden="true"></i> Refresh Cast Info';
@@ -3397,85 +3388,43 @@
         // Handle search
         function handleSearch() {
             const query = searchInput.value.trim();
+            contentGrid.innerHTML = ''; // Clear previous results immediately
             if (query) {
                 currentQuery = query;
                 currentPage = 1;
                 hideLiveSearchResults();
                 hideSearchSuggestions();
                 // Replace main content with search results
-                performFullSearch(query);
+                performFullSearch(query, currentMode);
             }
         }
 
-        async function performFullSearch(query) {
+        async function performFullSearch(query, type) {
             showSearchLoading(true);
-
             try {
-                // First try to get results from popular content
-                let allItems = await fetchAllContentForSearch();
-
-                // If we don't have enough results or the specific movie isn't found,
-                // try direct TMDB search
-                if (allItems.length < 50 || !containsMatchingTitle(allItems, query)) {
-                    const directResults = await directTMDBSearch(query);
-                    if (directResults.length > 0) {
-                        allItems = [...directResults, ...allItems];
-                    }
+                // Use the /search/multi endpoint for a comprehensive search
+                const response = await fetch(`${API_URL}/search/multi?query=${encodeURIComponent(query)}&page=1`);
+                if (!response.ok) {
+                    throw new Error(`API search failed with status: ${response.status}`);
                 }
+                const data = await response.json();
 
-                const searchResults = allItems.map(item => {
-                    const score = calculateRelevanceScore(item, query);
-                    return { item, score };
-                }).filter(result => result.score > 0)
-                  .sort((a, b) => b.score - a.score)
-                  .slice(0, 20) // Show more results in full search
-                  .map(result => result.item);
+                // Filter out people from the main grid results, but keep movies and tv shows
+                const searchResults = data.results.filter(item => item.media_type === 'movie' || item.media_type === 'tv');
 
+                // Update the current mode based on the first result if needed, or keep the user's selection
+                if (searchResults.length > 0) {
+                    currentMode = searchResults[0].media_type;
+                }
+                
                 displayContent(searchResults);
                 updateSearchResultsCounter(searchResults.length);
-                showSearchLoading(false);
             } catch (error) {
-                console.error('Error in full search:', error);
+                console.error('Error performing full search:', error);
+                contentGrid.innerHTML = `<p style="color: var(--accent); text-align: center;">Could not perform search. Please try again.</p>`;
+            } finally {
                 showSearchLoading(false);
             }
-        }
-
-        function containsMatchingTitle(items, query) {
-            const queryLower = query.toLowerCase();
-            return items.some(item => {
-                const title = (item.title || item.name || '').toLowerCase();
-                const originalTitle = (item.original_title || item.original_name || '').toLowerCase();
-                return title.includes(queryLower) || originalTitle.includes(queryLower);
-            });
-        }
-
-        async function directTMDBSearch(query) {
-            const results = [];
-
-            try {
-                const [movieResponse, tvResponse] = await Promise.all([
-                    fetch(`${API_URL}/search/movie?query=${encodeURIComponent(query)}&page=1`),
-                    fetch(`${API_URL}/search/tv?query=${encodeURIComponent(query)}&page=1`)
-                ]);
-
-                const [movieData, tvData] = await Promise.all([
-                    movieResponse.json(),
-                    tvResponse.json()
-                ]);
-
-                // Add type to items
-                const movies = movieData.results.map(item => ({ ...item, type: 'movie' }));
-                const tvShows = tvData.results.map(item => ({ ...item, type: 'tv' }));
-
-                results.push(...movies, ...tvShows);
-
-                console.log(`Direct search found ${results.length} results for "${query}"`);
-
-            } catch (error) {
-                console.error('Error in direct TMDB search:', error);
-            }
-
-            return results;
         }
 
         // Enhanced search with fuzzy matching and relevance scoring
@@ -3513,84 +3462,18 @@
             });
         }
 
-        async function fetchAllContentForSearch() {
-            const allItems = [];
-
+        async function directTMDBSearch(query) {
+            if (!query) return [];
             try {
-                // Fetch more pages for better search coverage
-                const pagesToFetch = 3; // Fetch first 3 pages for more results
-                const fetchPromises = [];
-
-                // Fetch multiple pages of movies and TV shows
-                for (let page = 1; page <= pagesToFetch; page++) {
-                    fetchPromises.push(
-                        fetch(`${API_URL}/movie/popular?page=${page}`).then(res => res.json()),
-                        fetch(`${API_URL}/tv/popular?page=${page}`).then(res => res.json())
-                    );
-                }
-
-                const responses = await Promise.all(fetchPromises);
-
-                // Process all responses
-                for (let i = 0; i < responses.length; i += 2) {
-                    const movieData = responses[i];
-                    const tvData = responses[i + 1];
-
-                    // Add type to items for easier identification
-                    const movies = movieData.results.map(item => ({ ...item, type: 'movie' }));
-                    const tvShows = tvData.results.map(item => ({ ...item, type: 'tv' }));
-
-                    allItems.push(...movies, ...tvShows);
-                }
-
-                // Remove duplicates based on ID
-                const uniqueItems = allItems.filter((item, index, self) =>
-                    index === self.findIndex(t => t.id === item.id)
-                );
-
-                // Add test data for popular titles that might not be in the API
-                if (window.testSearchData) {
-                    uniqueItems.push(...window.testSearchData);
-                }
-
-                console.log(`Loaded ${uniqueItems.length} items for search`);
-                return uniqueItems;
-
+                const response = await fetch(`${API_URL}/search/multi?query=${encodeURIComponent(query)}&page=1`);
+                if (!response.ok) return [];
+                const data = await response.json();
+                // Add a 'type' property for consistency with older parts of the code
+                return data.results.map(item => ({ ...item, type: item.media_type }));
             } catch (error) {
-                console.error('Error fetching content for search:', error);
-
-                // Fallback: try to search TMDB directly for the specific query
-                return await fallbackSearch();
+                console.error('Error in direct TMDB search:', error);
+                return [];
             }
-        }
-
-        async function fallbackSearch() {
-            const allItems = [];
-
-            try {
-                // If main search fails, try direct TMDB search
-                const searchQuery = searchInput.value.trim();
-                if (searchQuery.length >= 3) {
-                    const [movieResponse, tvResponse] = await Promise.all([
-                        fetch(`${API_URL}/search/movie?query=${encodeURIComponent(searchQuery)}&page=1`),
-                        fetch(`${API_URL}/search/tv?query=${encodeURIComponent(searchQuery)}&page=1`)
-                    ]);
-
-                    const [movieData, tvData] = await Promise.all([
-                        movieResponse.json(),
-                        tvResponse.json()
-                    ]);
-
-                    const movies = movieData.results.map(item => ({ ...item, type: 'movie' }));
-                    const tvShows = tvData.results.map(item => ({ ...item, type: 'tv' }));
-
-                    allItems.push(...movies, ...tvShows);
-                }
-            } catch (error) {
-                console.error('Fallback search also failed:', error);
-            }
-
-            return allItems;
         }
 
         function calculateRelevanceScore(item, searchTerm) {
@@ -3766,16 +3649,16 @@
             // Use requestAnimationFrame for smooth updates
             requestAnimationFrame(async () => {
                 try {
-                    const allItems = await fetchAllContentForSearch();
-                    const searchResults = allItems.map(item => {
+                    const searchResults = await directTMDBSearch(query);
+                    const scoredResults = searchResults.map(item => {
                         const score = calculateRelevanceScore(item, query);
                         return { item, score };
                     }).filter(result => result.score > 0)
                       .sort((a, b) => b.score - a.score)
                       .slice(0, 8) // Show top 8 results
                       .map(result => result.item);
-
-                    displayLiveSearchResults(searchResults, query);
+                    
+                    displayLiveSearchResults(scoredResults, query);
                     showSearchLoading(false);
                 } catch (error) {
                     console.error('Error in live search:', error);
@@ -3834,8 +3717,8 @@
         function createLiveResultCard(item, query) {
             const title = item.title || item.name || 'Untitled';
             const year = (item.release_date || item.first_air_date || '').split('-')[0];
-            const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
-            const type = item.type === 'movie' ? 'Movie' : 'TV Show';
+            const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/60x90/1a1a2e/00FF9D?text=N/A';
+            const type = item.media_type === 'movie' ? 'Movie' : (item.media_type === 'tv' ? 'TV Show' : 'Person');
             const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
 
             return `
@@ -3862,7 +3745,7 @@
         }
 
         function selectLiveResult(type, id) {
-            currentMode = type;
+            currentMode = (type === 'movie' || type === 'tv') ? type : currentMode;
             showDetails(id);
             hideLiveSearchResults();
             hideSearchSuggestions();
@@ -4738,9 +4621,6 @@
                     return;
                 }
 
-                const btn = providerBtns[index];
-                const provider = btn.getAttribute('data-provider');
-
                 // Update active button
                 providerBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -4750,7 +4630,7 @@
                 try {
                     // Fetch stream URL from worker
                     const params = new URLSearchParams({
-                        provider: provider,
+                        provider: providerName,
                         type: currentMode,
                         id: currentItem.id
                     });
