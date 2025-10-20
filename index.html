@@ -4729,13 +4729,12 @@
 
             // Provider buttons
             const providerBtns = providerButtons.querySelectorAll('.provider-btn-small');
-            let currentProviderIndex = 0;
-            let loadTimeout;
 
             // Function to load provider
-            const loadProvider = async (index) => {
-                if (index >= providerBtns.length) {
-                    alert('All providers failed to load. Please try again later.');
+            const loadProvider = async (providerName) => {
+                const btn = Array.from(providerBtns).find(b => b.dataset.provider === providerName);
+                if (!btn) {
+                    console.error(`Provider button for '${providerName}' not found.`);
                     return;
                 }
 
@@ -4766,33 +4765,22 @@
 
                     streamIframe.src = url;
 
-                    // Clear any existing timeout
-                    if (loadTimeout) clearTimeout(loadTimeout);
-
-                    // Set timeout to check if video loads (8 seconds)
-                    loadTimeout = setTimeout(() => {
-                        console.log(`Provider ${provider} failed to load, trying next...`);
-                        loadProvider(index + 1);
-                    }, 8000);
-
                     // Listen for iframe load to clear timeout
                     streamIframe.onload = () => {
-                        clearTimeout(loadTimeout);
                         videoLoading.style.display = 'none';
                     };
 
                 } catch (error) {
                     console.error('Error fetching video URL:', error);
-                    loadProvider(index + 1);
+                    videoLoading.innerHTML = '<span>Failed to load. Try another provider.</span>';
                 }
             };
 
             // Set up provider button event listeners
-            providerBtns.forEach((btn, index) => {
+            providerBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    if (loadTimeout) clearTimeout(loadTimeout);
-                    currentProviderIndex = index;
-                    loadProvider(currentProviderIndex);
+                    const provider = btn.dataset.provider;
+                    loadProvider(provider);
                 });
             });
 
@@ -4827,7 +4815,8 @@
 
             // Show the video modal and start loading first provider
             videoModal.style.display = 'block';
-            loadProvider(0);
+            const firstProvider = providerBtns[0]?.dataset.provider;
+            if (firstProvider) loadProvider(firstProvider);
         }
 
         // Function to stop video and audio
