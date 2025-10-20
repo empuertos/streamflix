@@ -4590,11 +4590,6 @@
             const streamIframe = document.getElementById('streamIframe');
             const videoLoading = document.getElementById('videoLoading');
             const closeVideo = document.getElementById('closeVideo');
-            const providerButtons = document.getElementById('providerButtons');
-            const videoTitle = document.getElementById('videoTitle');
-
-            videoTitle.textContent = currentMode === 'movie' ? item.title : item.name;
-
             // Function to load provider
             const loadProvider = async (providerName) => {
                 const btn = Array.from(providerButtons.querySelectorAll('.provider-btn-small')).find(b => b.dataset.provider === providerName);
@@ -4641,6 +4636,19 @@
                     videoLoading.innerHTML = `<span>Failed to load. Try another provider.<br><small style="color: #ccc;">(${error.message})</small></span>`;
                 }
             };
+
+            // Get elements after they are added to the DOM
+            const providerButtons = document.getElementById('providerButtons');
+            const videoTitle = document.getElementById('videoTitle');
+
+            if (!providerButtons || !videoTitle) {
+                console.error("Could not find video modal elements. Aborting playVideo.");
+                return;
+            }
+
+            // Set title
+            videoTitle.textContent = currentMode === 'movie' ? item.title : item.name;
+
 
             // Set up provider button event listeners
             providerButtons.querySelectorAll('.provider-btn-small').forEach(btn => {
