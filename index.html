@@ -4549,29 +4549,60 @@
             // Create video modal if it doesn't exist
             if (!document.getElementById('videoModal')) {
                 const videoModalHTML = `
-                    <div class="video-modal" id="videoModal" style="display: flex; justify-content: center; align-items: center;">
-                        <button class="close-video" id="closeVideo" style="position: absolute; top: 20px; right: 20px; z-index: 2001; font-size: 2rem;">&times;</button>
-                        <div class="video-player" style="width: 100%; height: 100%;">
-                            <div class="video-loading" id="videoLoading">
-                                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                                <span>Loading stream...</span>
+                    <div class="video-modal" id="videoModal">
+                        <div class="video-modal-content">
+                            <div class="video-header">
+                                <div class="video-title" id="videoTitle">Now Playing</div>
+                                <div class="provider-buttons" id="providerButtons">
+                                    <button class="provider-btn-small" data-provider="alpha">Alpha</button>
+                                    <button class="provider-btn-small" data-provider="bravo">Bravo</button>
+                                    <button class="provider-btn-small" data-provider="charlie">Charlie</button>
+                                    <button class="provider-btn-small" data-provider="delta">Delta</button>
+                                    <button class="provider-btn-small" data-provider="echo">Echo</button>
+                                    <button class="provider-btn-small" data-provider="foxtrot">Foxtrot</button>
+                                    <button class="provider-btn-small" data-provider="golf">Golf</button>
+                                    <button class="provider-btn-small" data-provider="hotel">Hotel</button>
+                                    <button class="provider-btn-small" data-provider="india">India</button>
+                                    <button class="provider-btn-small" data-provider="juliet">Juliet</button>
+                                    <button class="provider-btn-small" data-provider="kilo">Kilo</button>
+                                    <button class="provider-btn-small" data-provider="lima">Lima</button>
+                                    <button class="provider-btn-small" data-provider="mike">Mike</button>
+                                    <button class="provider-btn-small" data-provider="november">November (4K)</button>
+                                </div>
+                                <div class="video-quality">HD</div>
+                                <button class="close-video" id="closeVideo">&times;</button>
                             </div>
-                            <iframe class="stream-iframe" id="streamIframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                referrerpolicy="strict-origin-when-cross-origin">
-                            </iframe>
+                            <div class="video-player">
+                                <div class="video-loading" id="videoLoading">
+                                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                                    <span>Loading stream...</span>
+                                </div>
+                                <iframe class="stream-iframe" id="streamIframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                    referrerpolicy="strict-origin-when-cross-origin">
+                                </iframe>
+                            </div>
                         </div>
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', videoModalHTML);
             }
-            // Get elements
             const videoModal = document.getElementById('videoModal');
             const streamIframe = document.getElementById('streamIframe');
             const videoLoading = document.getElementById('videoLoading');
             const closeVideo = document.getElementById('closeVideo');
+            const providerButtons = document.getElementById('providerButtons');
+            const videoTitle = document.getElementById('videoTitle');
+
+            videoTitle.textContent = currentMode === 'movie' ? item.title : item.name;
 
             // Function to load provider
             const loadProvider = async (providerName) => {
+                const btn = Array.from(providerButtons.querySelectorAll('.provider-btn-small')).find(b => b.dataset.provider === providerName);
+                if (btn) {
+                    providerButtons.querySelectorAll('.provider-btn-small').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                }
+
                 // Reset loading indicator to its original state
                 videoLoading.innerHTML = `
                     <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
@@ -4611,6 +4642,13 @@
                 }
             };
 
+            // Set up provider button event listeners
+            providerButtons.querySelectorAll('.provider-btn-small').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    loadProvider(btn.dataset.provider);
+                });
+            });
+
             // Set up close video event listener
             closeVideo.addEventListener('click', () => {
                 stopVideo();
@@ -4627,7 +4665,7 @@
 
             // Show the video modal and start loading first provider
             videoModal.style.display = 'block';
-            const firstProvider = 'alpha'; // Default to the first provider
+            const firstProvider = providerButtons.querySelector('.provider-btn-small')?.dataset.provider || 'alpha';
             if (firstProvider) loadProvider(firstProvider);
         }
 
