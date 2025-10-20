@@ -4549,81 +4549,34 @@
             // Create video modal if it doesn't exist
             if (!document.getElementById('videoModal')) {
                 const videoModalHTML = `
-                    <div class="video-modal" id="videoModal">
-                        <div class="video-modal-content">
-                            <div class="video-header">
-                                <div class="video-title" id="videoTitle">Now Playing</div>
-                                <div class="provider-buttons" id="providerButtons">
-                                    <button class="provider-btn-small" data-provider="alpha">Alpha</button>
-                                    <button class="provider-btn-small" data-provider="bravo">Bravo</button>
-                                    <button class="provider-btn-small" data-provider="charlie">Charlie</button>
-                                    <button class="provider-btn-small" data-provider="delta">Delta</button>
-                                    <button class="provider-btn-small" data-provider="echo">Echo</button>
-                                    <button class="provider-btn-small" data-provider="foxtrot">Foxtrot</button>
-                                    <button class="provider-btn-small" data-provider="golf">Golf</button>
-                                    <button class="provider-btn-small" data-provider="hotel">Hotel</button>
-                                    <button class="provider-btn-small" data-provider="india">India</button>
-                                    <button class="provider-btn-small" data-provider="juliet">Juliet</button>
-                                    <button class="provider-btn-small" data-provider="kilo">Kilo</button>
-                                    <button class="provider-btn-small" data-provider="lima">Lima</button>
-                                    <button class="provider-btn-small" data-provider="mike">Mike</button>
-                                    <button class="provider-btn-small" data-provider="november">November (4K)</button>
-                                </div>
-                                <div class="video-quality">HD</div>
-                                <button class="close-video" id="closeVideo">&times;</button>
+                    <div class="video-modal" id="videoModal" style="display: flex; justify-content: center; align-items: center;">
+                        <button class="close-video" id="closeVideo" style="position: absolute; top: 20px; right: 20px; z-index: 2001; font-size: 2rem;">&times;</button>
+                        <div class="video-player" style="width: 100%; height: 100%;">
+                            <div class="video-loading" id="videoLoading">
+                                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                                <span>Loading stream...</span>
                             </div>
-                            <div class="video-player">
-                                <div class="video-loading" id="videoLoading">
-                                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                                    <span>Loading stream...</span>
-                                </div>
-                                <iframe class="stream-iframe" id="streamIframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                    referrerpolicy="strict-origin-when-cross-origin">
-                                </iframe>
-                                <div class="player-controls" id="playerControls">
-                                    <div class="controls-top">
-                                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-                                    </div>
-                                    <div class="controls-bottom">
-                                        <div class="progress-container" id="progressContainer">
-                                            <div class="progress-bar" id="progressBar"></div>
-                                        </div>
-                                        <button class="fullscreen-btn" id="fullscreenBtn"><i class="fas fa-expand" aria-hidden="true"></i></button>
-                                        <button class="next-episode-btn" id="nextEpisodeBtn"><i class="fas fa-step-forward" aria-hidden="true"></i></button>
-                                    </div>
-                                </div>
-                            </div>
+                            <iframe class="stream-iframe" id="streamIframe" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                referrerpolicy="strict-origin-when-cross-origin">
+                            </iframe>
                         </div>
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', videoModalHTML);
             }
-
             // Get elements
             const videoModal = document.getElementById('videoModal');
             const streamIframe = document.getElementById('streamIframe');
             const videoLoading = document.getElementById('videoLoading');
             const closeVideo = document.getElementById('closeVideo');
-            const providerButtons = document.getElementById('providerButtons');
-            const videoTitle = document.getElementById('videoTitle');
-
-            // Set title
-            videoTitle.textContent = currentMode === 'movie' ? item.title : item.name;
-
-            // Provider buttons
-            const providerBtns = providerButtons.querySelectorAll('.provider-btn-small');
 
             // Function to load provider
             const loadProvider = async (providerName) => {
-                const btn = Array.from(providerBtns).find(b => b.dataset.provider === providerName);
-                if (!btn) {
-                    console.error(`Provider button for '${providerName}' not found.`);
-                    return;
-                }
-
-                // Update active button
-                providerBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                // Reset loading indicator to its original state
+                videoLoading.innerHTML = `
+                    <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    <span>Loading stream...</span>
+                `;
 
                 videoLoading.style.display = 'flex';
 
@@ -4639,8 +4592,10 @@
                         params.append('e', '1');
                     }
                     const response = await fetch(`${API_URL}/stream/?${params}`);
-                    if (!response.ok) throw new Error('Failed to fetch stream URL');
                     const data = await response.json();
+                    if (!response.ok || !data.url) {
+                        throw new Error(data.error || 'Failed to fetch stream URL');
+                    }
                     const url = data.url;
 
                     streamIframe.src = url;
@@ -4652,36 +4607,14 @@
 
                 } catch (error) {
                     console.error('Error fetching video URL:', error);
-                    videoLoading.innerHTML = '<span>Failed to load. Try another provider.</span>';
+                    videoLoading.innerHTML = `<span>Failed to load. Try another provider.<br><small style="color: #ccc;">(${error.message})</small></span>`;
                 }
             };
-
-            // Set up provider button event listeners
-            providerBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const provider = btn.dataset.provider;
-                    loadProvider(provider);
-                });
-            });
-
-            // Set up player controls
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            fullscreenBtn.addEventListener('click', () => {
-                const player = document.querySelector('.video-player');
-                if (player.requestFullscreen) {
-                    player.requestFullscreen();
-                } else if (player.webkitRequestFullscreen) {
-                    player.webkitRequestFullscreen();
-                } else if (player.msRequestFullscreen) {
-                    player.msRequestFullscreen();
-                }
-            });
 
             // Set up close video event listener
             closeVideo.addEventListener('click', () => {
                 stopVideo();
                 videoModal.style.display = 'none';
-                detailModal.style.display = 'block';
             });
 
             // Also stop video when pressing ESC key
@@ -4689,13 +4622,12 @@
                 if (e.key === 'Escape' && videoModal.style.display === 'block') {
                     stopVideo();
                     videoModal.style.display = 'none';
-                    detailModal.style.display = 'block';
                 }
             });
 
             // Show the video modal and start loading first provider
             videoModal.style.display = 'block';
-            const firstProvider = providerBtns[0]?.dataset.provider;
+            const firstProvider = 'alpha'; // Default to the first provider
             if (firstProvider) loadProvider(firstProvider);
         }
 
