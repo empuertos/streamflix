@@ -2408,6 +2408,10 @@
             display: block;
         }
 
+        .video-modal-content.tv-mode .provider-btn-small[data-provider="november"] {
+            display: none;
+        }
+
         /* Mobile optimizations for video modal */
         @media (max-width: 768px) {
             .video-header {
@@ -4598,6 +4602,10 @@
                 console.error("Could not find video modal elements. Aborting playVideo.");
                 return;
             }
+
+            // Add/remove class for TV mode to hide/show 4K button
+            const videoModalContent = document.querySelector('.video-modal-content');
+            videoModalContent.classList.toggle('tv-mode', currentMode === 'tv');
 
             const loadProvider = async (providerName) => {
                 const btn = Array.from(providerButtons.querySelectorAll('.provider-btn-small')).find(b => b.dataset.provider === providerName);
