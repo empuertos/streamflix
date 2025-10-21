@@ -5113,12 +5113,35 @@
                 videoLoading.style.display = 'flex';
 
                 try {
-                    // Fetch stream URL from worker with timeout
+                    // Validate that we have a proper TMDB ID
+                    if (!currentItem || !currentItem.id) {
+                        throw new Error('No valid item ID available for streaming');
+                    }
+
+                    // Ensure we're using TMDB ID, not IMDB ID
+                    const tmdbId = currentItem.id; // TMDB API returns TMDB IDs as the main 'id' field
+
+                    // Validate TMDB ID format (should be a number)
+                    if (isNaN(parseInt(tmdbId))) {
+                        throw new Error(`Invalid TMDB ID format: ${tmdbId}. Expected a numeric TMDB ID.`);
+                    }
+
+                    // Special handling for lima provider - ensure clean TMDB ID
+                    if (providerName === 'lima') {
+                        console.log(`Lima provider requested - ensuring clean TMDB ID: ${tmdbId}`);
+                        // Lima (VidOra) is known to be strict about TMDB ID format
+                        const cleanTmdbId = parseInt(tmdbId).toString();
+                        params.set('id', cleanTmdbId);
+                        console.log(`Clean TMDB ID for lima provider: ${cleanTmdbId}`);
+                    }
+
                     const params = new URLSearchParams({
                         provider: providerName,
                         type: currentMode,
-                        id: currentItem.id
+                        id: tmdbId
                     });
+
+                    console.log(`Loading ${providerName} provider for ${currentMode} with TMDB ID: ${tmdbId} (Title: ${currentItem.title || currentItem.name})`);
                     if (currentMode === 'tv') {
                         params.append('s', '1');
                         params.append('e', '1');
@@ -5133,10 +5156,18 @@
                     clearTimeout(timeoutId);
 
                     const data = await response.json();
-                    if (!response.ok || !data.url) {
-                        throw new Error(data.error || 'Failed to fetch stream URL');
+                    console.log(`Provider ${providerName} response:`, data);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${data.error || response.statusText}`);
                     }
+
+                    if (!data.url) {
+                        throw new Error(data.error || 'No stream URL returned from provider');
+                    }
+
                     const url = data.url;
+                    console.log(`Successfully got stream URL from ${providerName}:`, url.substring(0, 50) + '...');
 
                     // Update progress
                     videoLoading.querySelector('.progress-text').textContent = 'Stream loaded, starting video...';
@@ -5159,6 +5190,11 @@
                 } catch (error) {
                     console.error(`Error with provider ${providerName}:`, error);
 
+                    // Check for specific TMDB vs IMDB ID error
+                    if (error.message && error.message.includes('IMDB') && error.message.includes('TMDB')) {
+                        console.error(`Provider ${providerName} received IMDB ID instead of TMDB ID. This should be fixed now.`);
+                    }
+
                     // Try retry logic for network errors
                     if (retryCount < 2 && (error.name === 'AbortError' || error.message.includes('fetch'))) {
                         console.log(`Retrying provider ${providerName}, attempt ${retryCount + 1}`);
@@ -5167,18 +5203,21 @@
                         return;
                     }
 
-                    // Show error with retry option
+                    // Show user-friendly error with retry option
+                    const isIdError = error.message && (error.message.includes('IMDB') || error.message.includes('TMDB') || error.message.includes('ID'));
                     videoLoading.innerHTML = `
                         <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                        <span>Failed to load video</span>
-                        <div class="progress-text">${error.message}</div>
+                        <span>${isIdError ? 'Provider Error' : 'Failed to load video'}</span>
+                        <div class="progress-text">${isIdError ? 'This provider may not support this content' : error.message}</div>
                         <button class="retry-btn" onclick="loadProvider('${providerName}', 0)">Try Again</button>
                     `;
 
-                    // Auto-try next provider after 5 seconds
-                    setTimeout(() => {
-                        tryNextProvider(providerName);
-                    }, 5000);
+                    // Auto-try next provider after 5 seconds (unless it's an ID-specific error)
+                    if (!isIdError) {
+                        setTimeout(() => {
+                            tryNextProvider(providerName);
+                        }, 5000);
+                    }
                 }
             };
 
@@ -5533,6 +5572,31 @@
                 document.body.style.overflow = ''; // Restore scrolling
             }
         }
+
+        // Debug function for video provider issues
+        window.debugVideoProvider = function(providerName = 'lima') {
+            console.log('=== Video Provider Debug Info ===');
+            console.log('Current item:', currentItem);
+            console.log('Current item ID:', currentItem?.id);
+            console.log('Current item ID type:', typeof currentItem?.id);
+            console.log('Is numeric?', !isNaN(parseInt(currentItem?.id)));
+            console.log('Provider requested:', providerName);
+            console.log('Current mode:', currentMode);
+
+            if (currentItem && currentItem.id) {
+                const tmdbId = parseInt(currentItem.id).toString();
+                console.log('Clean TMDB ID would be:', tmdbId);
+
+                // Test the provider directly
+                console.log(`Testing ${providerName} provider with TMDB ID ${tmdbId}...`);
+                const testParams = new URLSearchParams({
+                    provider: providerName,
+                    type: currentMode,
+                    id: tmdbId
+                });
+                console.log('Test URL would be:', `${API_URL}/stream/?${testParams}`);
+            }
+        };
 
         // Make functions globally available for onclick handlers
         window.selectSuggestion = selectSuggestion;
