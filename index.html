@@ -200,6 +200,17 @@
             opacity: 1;
             visibility: visible;
         }
+        
+        /* Styles for filters inside the sidebar */
+        .sidebar .categories-section {
+            margin-bottom: 1rem;
+        }
+        .sidebar .categories-section h4 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            padding-left: 0;
+        }
 
         header {
             background: linear-gradient(to right, var(--dark), var(--secondary));
@@ -1150,6 +1161,11 @@
         /* Mobile responsiveness for categories sidebar */
         @media (max-width: 1024px) {
             .main-content {
+                flex-direction: column;
+            }
+
+            .categories-sidebar {
+                display: none; /* Hide original sidebar on mobile */
                 flex-direction: column;
             }
 
@@ -2726,6 +2742,11 @@
                 font-size: 0.7rem;
                 padding: 0.2rem 0.4rem;
             }
+
+            #backToTopBtn {
+                bottom: 20px;
+                right: 20px;
+            }
         }
     </style>
 </head>
@@ -2797,37 +2818,7 @@
         </section>
 
         <div class="main-content">
-            <aside class="categories-sidebar">
-                <div class="categories-header">
-                    <h3><i class="fas fa-compass" aria-hidden="true"></i> Explore</h3>
-                </div>
-
-                <div class="mode-toggle">
-                    <button class="mode-btn active" id="movieMode">Movies</button>
-                    <button class="mode-btn" id="tvMode">TV Shows</button>
-                </div>
-
-                <div class="categories-section">
-                    <h4><i class="fas fa-film" aria-hidden="true"></i> Movie Genres</h4>
-                    <div class="category-list" id="movieCategories">
-                        <!-- Movie categories will be loaded here -->
-                    </div>
-                </div>
-
-                <div class="categories-section">
-                    <h4><i class="fas fa-tv" aria-hidden="true"></i> TV Show Genres</h4>
-                    <div class="category-list" id="tvCategories">
-                        <!-- TV categories will be loaded here -->
-                    </div>
-                </div>
-
-                <div class="categories-section">
-                    <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> By Year</h4>
-                    <div class="year-list" id="yearCategories">
-                        <!-- Year categories will be loaded here -->
-                    </div>
-                </div>
-            </aside>
+            <aside class="categories-sidebar"></aside> <!-- Keep this for desktop view, content will be added by JS -->
 
             <main class="content-grid-wrapper" style="flex: 1;">
                 <h2 class="section-title"><i class="fas fa-fire" aria-hidden="true"></i> Popular Now</h2>
@@ -2880,6 +2871,9 @@
 
     </div>
 
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
     <!-- Trailer Modal -->
     <div class="trailer-modal" id="trailerModal">
         <div class="trailer-modal-content">
@@ -2908,6 +2902,7 @@
         // State for combined filters
         let activeGenre = null;
         let activeYear = null;
+        let backToTopBtn = null;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -2941,11 +2936,6 @@
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
-        const sidebarMoviesBtn = document.getElementById('sidebarMoviesBtn');
-        const sidebarTvBtn = document.getElementById('sidebarTvBtn');
-        const sidebarSearchBtn = document.getElementById('sidebarSearchBtn');
-        const sidebarGenresBtn = document.getElementById('sidebarGenresBtn');
-        const sidebarYearsBtn = document.getElementById('sidebarYearsBtn');
 
         // Hero slideshow state
         let heroMovies = [];
@@ -2959,7 +2949,9 @@
             setupInfiniteScroll();
             setupEventListeners();
             addSearchEnhancements();
+            setupDesktopSidebar(); // New function to handle desktop sidebar
             loadCategories();
+            setupBackToTopButton();
             initializeImageLoading();
 
             // Set interval to refetch hero movies every 5 minutes
@@ -3124,6 +3116,36 @@
             });
         }
 
+        // New function to clone filters to the desktop sidebar
+        function setupDesktopSidebar() {
+            if (window.innerWidth > 1024) {
+                const desktopSidebar = document.querySelector('.categories-sidebar');
+                if (desktopSidebar) {
+                    desktopSidebar.innerHTML = `
+                        <div class="categories-header">
+                            <h3><i class="fas fa-compass" aria-hidden="true"></i> Explore</h3>
+                        </div>
+                        <div class="mode-toggle">
+                            <button class="mode-btn active" id="desktopMovieMode">Movies</button>
+                            <button class="mode-btn" id="desktopTvMode">TV Shows</button>
+                        </div>
+                        <div class="categories-section">
+                            <h4><i class="fas fa-film" aria-hidden="true"></i> Movie Genres</h4>
+                            <div class="category-list" id="desktopMovieCategories"></div>
+                        </div>
+                        <div class="categories-section">
+                            <h4><i class="fas fa-tv" aria-hidden="true"></i> TV Show Genres</h4>
+                            <div class="category-list" id="desktopTvCategories"></div>
+                        </div>
+                        <div class="categories-section">
+                            <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> By Year</h4>
+                            <div class="year-list" id="desktopYearCategories"></div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         // Function to refresh all cast information for visible cards
         function refreshAllCastInfo() {
             console.log('Refreshing all cast information...');
@@ -3195,57 +3217,54 @@
 
         function populateMovieCategories(genres) {
             const container = document.getElementById('movieCategories');
-            if (!container) return;
+            const desktopContainer = document.getElementById('desktopMovieCategories');
+            if (!container && !desktopContainer) return;
 
-            container.innerHTML = '';
-
-            genres.forEach(genre => {
+            const createCategoryItem = (genre) => {
                 const categoryItem = document.createElement('div');
                 categoryItem.className = 'category-item';
                 categoryItem.setAttribute('data-genre-id', genre.id);
                 categoryItem.setAttribute('data-genre-type', 'movie');
                 categoryItem.innerHTML = `<span>${genre.name}</span>`;
+                return categoryItem;
+            };
 
-                categoryItem.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const clickedGenreId = this.getAttribute('data-genre-id');
-                    const clickedType = this.getAttribute('data-genre-type') || currentMode;
-                    filterByGenre(parseInt(clickedGenreId), clickedType, e);
-                });
-
-                container.appendChild(categoryItem);
+            if (container) container.innerHTML = '';
+            if (desktopContainer) desktopContainer.innerHTML = '';
+            
+            genres.forEach(genre => {
+                if (container) container.appendChild(createCategoryItem(genre));
+                if (desktopContainer) desktopContainer.appendChild(createCategoryItem(genre));
             });
         }
 
         function populateTVCategories(genres) {
             const container = document.getElementById('tvCategories');
-            if (!container) return;
+            const desktopContainer = document.getElementById('desktopTvCategories');
+            if (!container && !desktopContainer) return;
 
-            container.innerHTML = '';
-
-            genres.forEach(genre => {
+            const createCategoryItem = (genre) => {
                 const categoryItem = document.createElement('div');
                 categoryItem.className = 'category-item';
                 categoryItem.setAttribute('data-genre-id', genre.id);
                 categoryItem.setAttribute('data-genre-type', 'tv');
                 categoryItem.innerHTML = `<span>${genre.name}</span>`;
+                return categoryItem;
+            };
 
-                categoryItem.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const clickedGenreId = this.getAttribute('data-genre-id');
-                    const clickedType = this.getAttribute('data-genre-type') || currentMode;
-                    filterByGenre(parseInt(clickedGenreId), clickedType, e);
-                });
+            if (container) container.innerHTML = '';
+            if (desktopContainer) desktopContainer.innerHTML = '';
 
-                container.appendChild(categoryItem);
+            genres.forEach(genre => {
+                if (container) container.appendChild(createCategoryItem(genre));
+                if (desktopContainer) desktopContainer.appendChild(createCategoryItem(genre));
             });
         }
 
         function populateYearCategories(items) {
             const container = document.getElementById('yearCategories');
-            if (!container) return;
+            const desktopContainer = document.getElementById('desktopYearCategories');
+            if (!container && !desktopContainer) return;
 
             // Get unique years
             const years = new Map();
@@ -3261,30 +3280,26 @@
                 }
             });
 
-            container.innerHTML = '';
+            const createYearItem = (year, count) => {
+                const yearItem = document.createElement('div');
+                yearItem.className = 'year-item';
+                yearItem.setAttribute('data-year', year);
+                yearItem.innerHTML = `
+                    <span>${year}</span>
+                    <span class="year-count">${count}</span>
+                `;
+                return yearItem;
+            };
+
+            if (container) container.innerHTML = '';
+            if (desktopContainer) desktopContainer.innerHTML = '';
 
             Array.from(years.entries())
                 .sort((a, b) => b[0] - a[0]) // Sort by year descending
                 .slice(0, 15) // Show last 15 years
                 .forEach(([year, count]) => {
-                    const yearItem = document.createElement('div');
-                    yearItem.className = 'year-item';
-                    yearItem.setAttribute('data-year', year);
-                    yearItem.innerHTML = `
-                        <span>${year}</span>
-                        <span class="year-count">${count}</span>
-                    `;
-
-                    // Add click event listener with proper context
-                    yearItem.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const clickedYear = this.getAttribute('data-year');
-                        console.log('Year clicked:', clickedYear);
-                        filterByYear(clickedYear);
-                    });
-
-                    container.appendChild(yearItem);
+                    if (container) container.appendChild(createYearItem(year, count));
+                    if (desktopContainer) desktopContainer.appendChild(createYearItem(year, count));
                 });
         }
 
@@ -3307,6 +3322,7 @@
             // Set mode and apply filters
             currentMode = type;
             applyFiltersAndFetch();
+            closeSidebar(); // Close sidebar after applying filter
         }
 
         // Clear the main content grid before displaying new results
@@ -3329,6 +3345,7 @@
             }
 
             applyFiltersAndFetch();
+            closeSidebar(); // Close sidebar after applying filter
         }
 
         async function applyFiltersAndFetch() {
@@ -3660,63 +3677,12 @@
             movieModeBtn.addEventListener('click', () => switchMode('movie'));
             tvModeBtn.addEventListener('click', () => switchMode('tv'));
 
-            // Hamburger menu toggle
-            if (hamburgerMenu) {
-                hamburgerMenu.addEventListener('click', toggleSidebar);
-            }
-
-            // Sidebar overlay click to close
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', closeSidebar);
-            }
-
-            // Sidebar navigation buttons
-            if (sidebarMoviesBtn) {
-                sidebarMoviesBtn.addEventListener('click', () => {
-                    switchMode('movie');
-                    sidebarMoviesBtn.classList.add('active');
-                    sidebarTvBtn?.classList.remove('active');
-                    closeSidebar();
-                });
-            }
-
-            if (sidebarTvBtn) {
-                sidebarTvBtn.addEventListener('click', () => {
-                    switchMode('tv');
-                    sidebarTvBtn.classList.add('active');
-                    sidebarMoviesBtn?.classList.remove('active');
-                    closeSidebar();
-                });
-            }
-
-            if (sidebarSearchBtn) {
-                sidebarSearchBtn.addEventListener('click', () => {
-                    searchInput?.focus();
-                    closeSidebar();
-                });
-            }
-
-            if (sidebarGenresBtn) {
-                sidebarGenresBtn.addEventListener('click', () => {
-                    // Scroll to categories section
-                    const categoriesSection = document.querySelector('.categories-section');
-                    if (categoriesSection) {
-                        categoriesSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                    closeSidebar();
-                });
-            }
-
-            if (sidebarYearsBtn) {
-                sidebarYearsBtn.addEventListener('click', () => {
-                    // Scroll to year categories section
-                    const yearSection = document.querySelector('#yearCategories');
-                    if (yearSection) {
-                        yearSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                    closeSidebar();
-                });
-            }
+            // Desktop-only mode buttons
+            const desktopMovieModeBtn = document.getElementById('desktopMovieMode');
+            const desktopTvModeBtn = document.getElementById('desktopTvMode');
+            if(desktopMovieModeBtn) desktopMovieModeBtn.addEventListener('click', () => switchMode('movie'));
+            if(desktopTvModeBtn) desktopTvModeBtn.addEventListener('click', () => switchMode('tv'));
+            
             closeModal.addEventListener('click', () => detailModal.style.display = 'none');
 
             // Close modals when clicking outside
@@ -4366,9 +4332,18 @@
             activeYear = null;
             document.querySelectorAll('.category-item.active, .year-item.active').forEach(el => el.classList.remove('active'));
 
-            // Update active button
+            // Update active buttons in both sidebars
             movieModeBtn.classList.toggle('active', mode === 'movie');
             tvModeBtn.classList.toggle('active', mode === 'tv');
+            
+            const desktopMovieModeBtn = document.getElementById('desktopMovieMode');
+            const desktopTvModeBtn = document.getElementById('desktopTvMode');
+            if (desktopMovieModeBtn) {
+                desktopMovieModeBtn.classList.toggle('active', mode === 'movie');
+            }
+            if (desktopTvModeBtn) {
+                desktopTvModeBtn.classList.toggle('active', mode === 'tv');
+            }
 
             fetchContent();
         }
@@ -5530,11 +5505,13 @@
 
         // Sidebar functions
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const sidebar = document.getElementById('sidebar'); // Mobile sidebar
+            const hamburgerMenu = document.getElementById('hamburgerMenu'); // Hamburger icon
+            const sidebarOverlay = document.getElementById('sidebarOverlay'); // Overlay
 
-            if (sidebar && hamburgerMenu) {
+            if (sidebar && hamburgerMenu && sidebarOverlay) {
                 const isOpen = sidebar.classList.contains('open');
+                sidebar.style.display = 'flex'; // Make sure it's visible for transition
                 if (isOpen) {
                     closeSidebar();
                 } else {
@@ -5545,10 +5522,12 @@
 
         function openSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
             const hamburgerMenu = document.getElementById('hamburgerMenu');
 
-            if (sidebar && hamburgerMenu) {
+            if (sidebar && hamburgerMenu && sidebarOverlay) {
                 sidebar.classList.add('open');
+                sidebarOverlay.classList.add('open');
                 hamburgerMenu.classList.add('active');
                 document.body.style.overflow = 'hidden'; // Prevent background scrolling
 
@@ -5562,10 +5541,12 @@
 
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
             const hamburgerMenu = document.getElementById('hamburgerMenu');
 
-            if (sidebar && hamburgerMenu) {
+            if (sidebar && hamburgerMenu && sidebarOverlay) {
                 sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
                 hamburgerMenu.classList.remove('active');
                 document.body.style.overflow = ''; // Restore scrolling
             }
@@ -5611,35 +5592,18 @@
 
         // Add trending category click handlers and ensure all categories work
         function attachCategoryEventListeners() {
-            // Attach movie category listeners
-            const movieCategories = document.querySelectorAll('#movieCategories .category-item');
-            movieCategories.forEach(item => {
+            // Attach listeners to all category and year items, in both sidebars
+            const allCategoryItems = document.querySelectorAll('.category-item');
+            allCategoryItems.forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     const genreId = this.getAttribute('data-genre-id');
                     const genreType = this.getAttribute('data-genre-type');
-                    const genreText = this.querySelector('span').textContent;
-                    console.log('Movie category clicked:', genreText, 'ID:', genreId);
                     filterByGenre(parseInt(genreId), genreType, e);
                 });
             });
 
-            // Attach TV category listeners
-            const tvCategories = document.querySelectorAll('#tvCategories .category-item');
-            tvCategories.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const genreId = this.getAttribute('data-genre-id');
-                    const genreType = this.getAttribute('data-genre-type');
-                    const genreText = this.querySelector('span').textContent;
-                    console.log('TV category clicked:', genreText, 'ID:', genreId);
-                    filterByGenre(parseInt(genreId), genreType, e);
-                });
-            });
-
-            // Attach year category listeners
             const yearCategories = document.querySelectorAll('#yearCategories .year-item');
             yearCategories.forEach(item => {
                 item.addEventListener('click', function(e) {
@@ -5651,17 +5615,9 @@
                 });
             });
 
-            // Attach trending category listeners
-            const trendingItems = document.querySelectorAll('.trending-item');
-            trendingItems.forEach(item => {
-                item.addEventListener('click', handleTrendingClick);
-            });
-
             console.log('Category event listeners attached:', {
-                movieCategories: movieCategories.length,
-                tvCategories: tvCategories.length,
-                yearCategories: yearCategories.length,
-                trendingItems: trendingItems.length
+                allCategoryItems: allCategoryItems.length,
+                yearCategories: yearCategories.length
             });
         }
 
