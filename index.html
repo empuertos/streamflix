@@ -2903,10 +2903,11 @@
         let currentMode = 'movie';
         let currentItem = null;
         let currentHeroIndex = 0;
-
-        // Initialize filter state variables
-        window.lastGenreFilter = null;
-        window.lastYearFilter = null;
+ 
+        // For infinite scroll
+        // State for combined filters
+        let activeGenre = null;
+        let activeYear = null;
 
         // DOM Elements
         const contentGrid = document.getElementById('contentGrid');
@@ -2955,6 +2956,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchContent();
             fetchHeroMovies();
+            setupInfiniteScroll();
             setupEventListeners();
             addSearchEnhancements();
             loadCategories();
@@ -3208,7 +3210,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const clickedGenreId = this.getAttribute('data-genre-id');
-                    const clickedType = this.getAttribute('data-genre-type');
+                    const clickedType = this.getAttribute('data-genre-type') || currentMode;
                     filterByGenre(parseInt(clickedGenreId), clickedType, e);
                 });
 
@@ -3233,7 +3235,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const clickedGenreId = this.getAttribute('data-genre-id');
-                    const clickedType = this.getAttribute('data-genre-type');
+                    const clickedType = this.getAttribute('data-genre-type') || currentMode;
                     filterByGenre(parseInt(clickedGenreId), clickedType, e);
                 });
 
@@ -3289,21 +3291,22 @@
         function filterByGenre(genreId, type, event) {
             console.log('Filtering by genre:', genreId, 'Type:', type);
 
-            // Remove active class from all categories
-            document.querySelectorAll('.category-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Add active class to clicked category
-            if (event && event.currentTarget) {
-                const clickedItem = event.currentTarget;
-                if (clickedItem) {
-                    clickedItem.classList.add('active');
-                }
+            const clickedItem = event.currentTarget;
+            // If the same genre is clicked again, deactivate it
+            if (clickedItem.classList.contains('active')) {
+                activeGenre = null;
+                clickedItem.classList.remove('active');
+            } else {
+                // Deactivate other genres
+                document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+                // Activate the clicked one
+                clickedItem.classList.add('active');
+                activeGenre = genreId;
             }
 
-            // Filter content by genre
-            performGenreFilter(genreId, type);
+            // Set mode and apply filters
+            currentMode = type;
+            applyFiltersAndFetch();
         }
 
         // Clear the main content grid before displaying new results
@@ -3311,75 +3314,78 @@
 
         function filterByYear(year, event = null) {
             console.log('Filtering by year:', year);
+            const clickedItem = event.currentTarget;
 
-            // Remove active class from all years
-            document.querySelectorAll('.year-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Add active class to clicked year if event is provided
-            if (event && event.target) {
-                const clickedItem = event.target.closest('.year-item');
-                if (clickedItem) {
-                    clickedItem.classList.add('active');
-                }
+            // If the same year is clicked again, deactivate it
+            if (clickedItem.classList.contains('active')) {
+                activeYear = null;
+                clickedItem.classList.remove('active');
+            } else {
+                // Deactivate other years
+                document.querySelectorAll('.year-item').forEach(item => item.classList.remove('active'));
+                // Activate the clicked one
+                clickedItem.classList.add('active');
+                activeYear = year;
             }
 
-            // Filter content by year
-            performYearFilter(year);
+            applyFiltersAndFetch();
         }
 
-        async function performGenreFilter(genreId, type) {
-            // Store the last action for retry functionality
-            window.lastGenreFilter = { genreId, type };
-
+        async function applyFiltersAndFetch() {
             // Clear the grid immediately for better UX
             contentGrid.innerHTML = '';
-
-            // Set the current mode to match the filter type
-            currentMode = type;
+            currentPage = 1; // Reset page on new filter
 
             try {
-                console.log('Performing genre filter:', { genreId, type });
+                console.log('Applying filters:', { genre: activeGenre, year: activeYear, mode: currentMode });
                 showSearchLoading(true);
 
-                let endpoint;
-                if (type === 'movie') {
-                    endpoint = `${API_URL}/discover/movie?with_genres=${genreId}&page=1`;
-                } else {
-                    endpoint = `${API_URL}/discover/tv?with_genres=${genreId}&page=1`;
+                const params = new URLSearchParams({
+                    page: currentPage
+                });
+
+                if (activeGenre) {
+                    params.append('with_genres', activeGenre);
                 }
 
-                console.log('Genre filter endpoint:', endpoint);
+                if (activeYear) {
+                    if (currentMode === 'movie') {
+                        params.append('primary_release_year', activeYear);
+                    } else { // tv
+                        params.append('first_air_date_year', activeYear);
+                    }
+                }
+
+                const endpoint = `${API_URL}/discover/${currentMode}?${params.toString()}`;
+
+                console.log('Filter endpoint:', endpoint);
                 const response = await fetch(endpoint);
 
                 if (!response.ok) {
                     console.error('API Error:', response.status, response.statusText);
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
+                
                 const data = await response.json();
-                console.log('Genre filter results:', data.results ? data.results.length : 'No results', data);
+                console.log('Filter results:', data.results ? data.results.length : 'No results', data);
 
                 if (!data.results || data.results.length === 0) {
-                    console.warn('No results returned from API for genre filter');
+                    console.warn('No results returned from API for the selected filters');
                     contentGrid.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
                             <i class="fas fa-search" style="font-size: 64px; color: var(--primary); margin-bottom: 30px;"></i>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">No ${type === 'movie' ? 'movies' : 'TV shows'} found</h3>
-                            <p style="font-size: 1.1rem;">This genre might not have content available at the moment.</p>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">No ${currentMode === 'movie' ? 'movies' : 'TV shows'} found</h3>
+                            <p style="font-size: 1.1rem;">No content matches your selected filters.</p>
                         </div>
                     `;
-                    updateSearchResultsCounter(0);
                 } else {
                     displayContent(data.results);
-                    updateSearchResultsCounter(data.results.length);
                 }
 
                 showSearchLoading(false);
 
             } catch (error) {
-                console.error('Error filtering by genre:', error);
+                console.error('Error applying filters:', error);
                 showSearchLoading(false);
 
                 // Show a more user-friendly error message
@@ -3387,51 +3393,33 @@
                     <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
                         <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: var(--accent); margin-bottom: 30px;" aria-hidden="true"></i>
                         <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Unable to filter by genre</h3>
-                        <p style="font-size: 1.1rem; margin-bottom: 20px;">${error.message}</p>
-                        <button onclick="retryLastAction()" class="btn btn-primary">Try Again</button>
+                        <p style="font-size: 1.1rem; margin-bottom: 20px;">Could not load content. Please try again.</p>
+                        <button onclick="applyFiltersAndFetch()" class="btn btn-primary">Try Again</button>
                     </div>
                 `;
-                updateSearchResultsCounter(0);
             }
         }
 
-        // Function to retry the last action
-        function retryLastAction() {
-            if (window.lastGenreFilter) {
-                performGenreFilter(window.lastGenreFilter.genreId, window.lastGenreFilter.type);
-            } else if (window.lastYearFilter) {
-                performYearFilter(window.lastYearFilter);
-            }
+        // Setup infinite scroll
+        function setupInfiniteScroll() {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    if (entries[0].isIntersecting && !isFetching) {
+                        console.log('Infinite scroll triggered');
+                        loadMore();
+                    }
+                },
+                { threshold: 1.0 }
+            );
+
+            // The loading element at the bottom of the grid will act as the trigger
+            observer.observe(loadingElement);
         }
 
-        async function performYearFilter(year) {
-            // Store the last action for retry functionality
-            window.lastYearFilter = year;
-
-            try {
-                showSearchLoading(true);
-
-                const [movieResponse, tvResponse] = await Promise.all([
-                    fetch(`${API_URL}/discover/movie?primary_release_year=${year}&page=1`),
-                    fetch(`${API_URL}/discover/tv?first_air_date.gte=${year}-01-01&first_air_date.lte=${year}-12-31&page=1`)
-                ]);
-
-                const [movieData, tvData] = await Promise.all([
-                    movieResponse.json(),
-                    tvResponse.json()
-                ]);
-
-                const combinedResults = [...movieData.results, ...tvData.results];
-                displayContent(combinedResults);
-                updateSearchResultsCounter(combinedResults.length);
-                showSearchLoading(false);
-
-            } catch (error) {
-                console.error('Error filtering by year:', error);
-                showSearchLoading(false);
-            }
+        function loadMore() {
+            currentPage++;
+            fetchContent(true); // Pass true to indicate it's a "load more" action
         }
-
         function addSearchEnhancements() {
             // Add search hint
             // Add refresh cast info button (hidden by default, can be enabled for debugging)
@@ -3671,8 +3659,6 @@
 
             movieModeBtn.addEventListener('click', () => switchMode('movie'));
             tvModeBtn.addEventListener('click', () => switchMode('tv'));
-
-            loadMoreBtn.addEventListener('click', loadMore);
 
             // Hamburger menu toggle
             if (hamburgerMenu) {
@@ -4375,6 +4361,10 @@
             currentMode = mode;
             currentPage = 1;
             contentGrid.innerHTML = '';
+            // Reset filters when switching main mode
+            activeGenre = null;
+            activeYear = null;
+            document.querySelectorAll('.category-item.active, .year-item.active').forEach(el => el.classList.remove('active'));
 
             // Update active button
             movieModeBtn.classList.toggle('active', mode === 'movie');
@@ -4384,33 +4374,33 @@
         }
 
         // Fetch content from TMDB API
-        async function fetchContent() {
+        async function fetchContent(isLoadMore = false) {
             if (isFetching) return;
             isFetching = true;
 
             loadingElement.style.display = 'block';
-            loadMoreBtn.style.display = 'none';
 
             try {
-                let endpoint;
-                if (currentQuery) {
-                    endpoint = currentMode === 'movie'
-                        ? `${API_URL}/search/movie?query=${currentQuery}&page=${currentPage}`
-                        : `${API_URL}/search/tv?query=${currentQuery}&page=${currentPage}`;
+                if (activeGenre || activeYear) {
+                    // If filters are active, use the filter function
+                    // The 'isLoadMore' flag is not used here as applyFiltersAndFetch has its own pagination logic
+                    await applyFiltersAndFetch(); 
                 } else {
-                    endpoint = currentMode === 'movie'
-                        ? `${API_URL}/movie/popular?page=${currentPage}`
-                        : `${API_URL}/tv/popular?page=${currentPage}`;
-                }
+                    // Otherwise, fetch popular content for the current mode
+                    const endpoint = `${API_URL}/${currentMode}/popular?page=${currentPage}`;
+                    const response = await fetch(endpoint);
+                    const data = await response.json();
 
-                const response = await fetch(endpoint);
-                const data = await response.json();
+                    if (isLoadMore) {
+                        appendContent(data.results);
+                    } else {
+                        displayContent(data.results);
+                    }
 
-                displayContent(data.results);
-
-                // Show load more button if there are more pages
-                if (data.page < data.total_pages) {
-                    loadMoreBtn.style.display = 'block';
+                    if (data.page >= data.total_pages) {
+                        // Hide loading spinner if there are no more pages
+                        loadingElement.style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching content:', error);
@@ -4664,6 +4654,20 @@
             });
         }
 
+        // Append content to the grid for infinite scroll
+        function appendContent(items) {
+            items.forEach((item, index) => {
+                const card = createContentCard(item);
+                contentGrid.appendChild(card);
+
+                // Stagger cast info loading for appended items
+                setTimeout(() => {
+                    loadCastInfo(item.id, item.type || currentMode);
+                }, index * 100);
+            });
+            initializeImageLoading(); // Re-initialize for new images
+        }
+
         // Load cast information for a movie/TV show
         async function loadCastInfo(itemId, type) {
             try {
@@ -4808,12 +4812,6 @@
             });
 
             return Promise.allSettled(promises);
-        }
-
-        // Load more content
-        function loadMore() {
-            currentPage++;
-            fetchContent();
         }
 
         // Show details in modal
@@ -5605,6 +5603,7 @@
         window.selectLiveResult = selectLiveResult;
         window.showLiveSearchResults = showLiveSearchResults;
         window.hideLiveSearchResults = hideLiveSearchResults;
+        window.applyFiltersAndFetch = applyFiltersAndFetch;
         window.filterByGenre = filterByGenre;
         window.filterByYear = filterByYear;
         window.toggleSidebar = toggleSidebar;
