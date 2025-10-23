@@ -511,6 +511,42 @@
             }
         }
 
+        /* Full-screen mobile search overlay */
+        .mobile-search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--secondary);
+            z-index: 1100;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .mobile-search-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: var(--dark);
+            border-bottom: 1px solid var(--primary);
+        }
+
+        .mobile-search-input {
+            flex: 1;
+            /* Reuse existing search-box styles */
+        }
+
+        .mobile-search-close {
+            font-size: 1.5rem;
+            color: var(--text);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
         .search-box {
             padding: 0.7rem 1rem;
             border-radius: 30px;
@@ -677,6 +713,65 @@
                 rgba(0, 255, 157, 0.08) 100%);
             animation: heroGlow 4s ease-in-out infinite alternate;
             border-radius: 20px;
+        }
+
+        .hero-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero:hover .hero-nav-btn {
+            opacity: 0.8;
+            visibility: visible;
+        }
+
+        .hero-nav-btn:hover {
+            background: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .hero-nav-btn.prev { left: 30px; }
+        .hero-nav-btn.next { right: 30px; }
+
+        .hero-progress-bar-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            z-index: 3;
+            border-radius: 0 0 20px 20px; /* Match hero border-radius */
+            overflow: hidden;
+        }
+
+        .hero-progress-bar {
+            height: 100%;
+            background: var(--primary-gradient);
+            width: 0;
+            animation: heroProgress 8s linear;
+        }
+
+        @keyframes heroProgress {
+            from { width: 0%; }
+            to { width: 100%; }
         }
 
         @keyframes heroGlow {
@@ -1059,6 +1154,69 @@
             border-left-color: var(--primary);
             color: var(--primary);
             box-shadow: 0 2px 10px rgba(0, 255, 157, 0.2);
+        }
+
+        .clear-filters-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-top: 1rem;
+            background: rgba(255, 46, 99, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: var(--accent);
+            color: var(--light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 46, 99, 0.2);
+        }
+
+        .recently-viewed-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.6rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .recently-viewed-item:hover {
+            background: rgba(0, 255, 157, 0.1);
+            border-left-color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .recently-viewed-poster {
+            width: 40px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .recently-viewed-info {
+            overflow: hidden;
+        }
+
+        .recently-viewed-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .year-list {
@@ -2799,6 +2957,17 @@
                     <i class="fas fa-calendar"></i>
                     <span>Years</span>
                 </button>
+                <div class="sidebar-divider"></div>
+                <button id="clearFiltersMobile" class="clear-filters-btn">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Clear Filters</span>
+                </button>
+                <div class="sidebar-divider"></div>
+                <div class="categories-section">
+                    <h4><i class="fas fa-history" aria-hidden="true"></i> Recently Viewed</h4>
+                    <div class="category-list" id="recentlyViewedMobile">
+                    </div>
+                </div>
             </nav>
         </div>
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -2806,6 +2975,10 @@
 
     <div class="container">
         <section class="hero">
+            <!-- Hero Navigation Buttons -->
+            <button class="hero-nav-btn prev" id="heroPrevBtn" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+            <button class="hero-nav-btn next" id="heroNextBtn" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+
             <div class="hero-content">
                 <h2 id="heroTitle">Unlimited Entertainment</h2>
                 <p id="heroDesc">Stream thousands of movies and TV shows in HD quality. Anytime, anywhere.</p>
@@ -2814,6 +2987,11 @@
                     <button class="btn btn-secondary" id="moreInfoBtn"><i class="fas fa-info-circle" aria-hidden="true"></i> More Info</button>
                 </div>
                 <div class="hero-status" id="heroStatus"></div>
+            </div>
+
+            <!-- Slideshow Progress Bar -->
+            <div class="hero-progress-bar-container">
+                <div class="hero-progress-bar" id="heroProgressBar"></div>
             </div>
         </section>
 
@@ -2935,6 +3113,8 @@
         // Hamburger menu and sidebar elements
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const sidebar = document.getElementById('sidebar');
+        const sidebarMoviesBtn = document.getElementById('sidebarMoviesBtn');
+        const sidebarTvBtn = document.getElementById('sidebarTvBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         // Hero slideshow state
@@ -2952,6 +3132,7 @@
             setupDesktopSidebar(); // New function to handle desktop sidebar
             loadCategories();
             setupBackToTopButton();
+            populateRecentlyViewed();
             initializeImageLoading();
 
             // Set interval to refetch hero movies every 5 minutes
@@ -3140,6 +3321,16 @@
                         <div class="categories-section">
                             <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> By Year</h4>
                             <div class="year-list" id="desktopYearCategories"></div>
+                        </div>
+                        <button id="clearFiltersDesktop" class="clear-filters-btn">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Clear Filters</span>
+                        </button>
+                        <div class="sidebar-divider" style="margin-top: 1.5rem;"></div>
+                        <div class="categories-section">
+                            <h4><i class="fas fa-history" aria-hidden="true"></i> Recently Viewed</h4>
+                            <div class="category-list" id="recentlyViewedDesktop">
+                            </div>
                         </div>
                     `;
                 }
@@ -3415,6 +3606,79 @@
                     </div>
                 `;
             }
+        }
+
+        // Function to clear all active filters
+        function clearAllFilters() {
+            console.log('Clearing all filters...');
+            activeGenre = null;
+            activeYear = null;
+
+            // Remove active classes from all filter items
+            document.querySelectorAll('.category-item.active, .year-item.active').forEach(el => el.classList.remove('active'));
+
+            // Fetch default content
+            fetchContent();
+        }
+
+        // Add an item to the recently viewed list
+        function addToRecentlyViewed(item) {
+            if (!item || !item.id) return;
+
+            let recentlyViewed = JSON.parse(localStorage.getItem('streamflixRecentlyViewed')) || [];
+
+            // Create a simplified item to store
+            const storedItem = {
+                id: item.id,
+                title: item.title || item.name,
+                type: item.media_type || currentMode,
+                poster_path: item.poster_path
+            };
+
+            // Remove existing item if it's already in the list to move it to the top
+            recentlyViewed = recentlyViewed.filter(i => i.id !== storedItem.id);
+
+            // Add new item to the beginning
+            recentlyViewed.unshift(storedItem);
+
+            // Limit the list to 5 items
+            const MAX_RECENTLY_VIEWED = 5;
+            if (recentlyViewed.length > MAX_RECENTLY_VIEWED) {
+                recentlyViewed = recentlyViewed.slice(0, MAX_RECENTLY_VIEWED);
+            }
+
+            localStorage.setItem('streamflixRecentlyViewed', JSON.stringify(recentlyViewed));
+
+            // Update the UI
+            populateRecentlyViewed();
+        }
+
+        // Populate the recently viewed sections in the sidebars
+        function populateRecentlyViewed() {
+            const recentlyViewed = JSON.parse(localStorage.getItem('streamflixRecentlyViewed')) || [];
+            const mobileContainer = document.getElementById('recentlyViewedMobile');
+            const desktopContainer = document.getElementById('recentlyViewedDesktop');
+
+            const createRecentItem = (item) => {
+                const posterUrl = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/40x60/1a1a2e/00FF9D?text=N/A';
+                const itemEl = document.createElement('div');
+                itemEl.className = 'recently-viewed-item';
+                itemEl.innerHTML = `
+                    <img src="${posterUrl}" alt="${item.title}" class="recently-viewed-poster">
+                    <div class="recently-viewed-info">
+                        <div class="recently-viewed-title">${item.title}</div>
+                    </div>
+                `;
+                itemEl.addEventListener('click', () => {
+                    currentMode = item.type;
+                    showDetails(item.id);
+                    closeSidebar();
+                });
+                return itemEl;
+            };
+
+            if (mobileContainer) mobileContainer.innerHTML = recentlyViewed.map(item => createRecentItem(item).outerHTML).join('');
+            if (desktopContainer) desktopContainer.innerHTML = recentlyViewed.map(item => createRecentItem(item).outerHTML).join('');
         }
 
         // Setup infinite scroll
@@ -3750,6 +4014,12 @@
                     alert('Movie information not available. Please wait for content to load or refresh the page.');
                 }
             });
+
+            // Hero navigation buttons
+            const heroPrevBtn = document.getElementById('heroPrevBtn');
+            const heroNextBtn = document.getElementById('heroNextBtn');
+            if (heroPrevBtn) heroPrevBtn.addEventListener('click', previousHeroSlide);
+            if (heroNextBtn) heroNextBtn.addEventListener('click', nextHeroSlide);
         }
 
         // Handle search
@@ -4026,6 +4296,18 @@
                       .map(result => result.item);
                     
                     displayLiveSearchResults(scoredResults, query);
+
+                    // Also update mobile overlay if visible
+                    if (document.getElementById('mobileSearchOverlay').style.display === 'flex') {
+                        const mobileResultsContainer = document.getElementById('mobileSearchResults');
+                        if (scoredResults.length > 0) {
+                            mobileResultsContainer.innerHTML = `<div class="live-results-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                                ${scoredResults.map(item => createLiveResultCard(item, query)).join('')}</div>`;
+                        } else {
+                            mobileResultsContainer.innerHTML = `<div class="no-live-results" style="padding: 30px; text-align: center; color: #ccc;"><p>No results for "${query}"</p></div>`;
+                        }
+                    }
+
                     showSearchLoading(false);
                 } catch (error) {
                     console.error('Error in live search:', error);
@@ -4035,6 +4317,11 @@
         }
 
         function displayLiveSearchResults(results, query) {
+            // On mobile, the overlay handles its own display. This function is for desktop dropdown.
+            if (window.innerWidth <= 768) {
+                return;
+            }
+
             let resultsContainer = document.getElementById('liveSearchResults');
 
             if (!resultsContainer) {
@@ -4119,6 +4406,11 @@
         }
 
         function hideLiveSearchResults() {
+            // Also hide mobile overlay results
+            const mobileResultsContainer = document.getElementById('mobileSearchResults');
+            if (mobileResultsContainer) mobileResultsContainer.innerHTML = '';
+
+            // Hide desktop dropdown
             const container = document.getElementById('liveSearchResults');
             if (container) {
                 container.style.display = 'none';
@@ -4441,6 +4733,14 @@
                 updateHeroStatus(movie);
             }, 300);
 
+            // Reset progress bar animation
+            const progressBar = document.getElementById('heroProgressBar');
+            if (progressBar) {
+                progressBar.style.animation = 'none';
+                void progressBar.offsetWidth; // Trigger reflow
+                progressBar.style.animation = 'heroProgress 8s linear';
+            }
+
             // Update index for the *next* slide
             currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
         }
@@ -4488,6 +4788,21 @@
 
             // Also update hero immediately
             updateHero();
+        }
+
+        // Manual hero navigation
+        function nextHeroSlide() {
+            if (heroMovies.length === 0) return;
+            // The index is already pointing to the next slide, so we just need to trigger the update
+            updateHero();
+            restartHeroSlideshow(); // Reset the timer
+        }
+
+        function previousHeroSlide() {
+            if (heroMovies.length === 0) return;
+            currentHeroIndex = (currentHeroIndex - 2 + heroMovies.length) % heroMovies.length;
+            updateHero();
+            restartHeroSlideshow(); // Reset the timer
         }
 
         // Get the currently displayed movie (safe method)
@@ -4948,6 +5263,7 @@
         async function playVideo(item) {
             currentItem = item;
             detailModal.style.display = 'none';
+            addToRecentlyViewed(item); // Add to recently viewed
 
             // Create video modal if it doesn't exist
             if (!document.getElementById('videoModal')) {
@@ -5587,6 +5903,7 @@
         window.applyFiltersAndFetch = applyFiltersAndFetch;
         window.filterByGenre = filterByGenre;
         window.filterByYear = filterByYear;
+        window.clearAllFilters = clearAllFilters;
         window.toggleSidebar = toggleSidebar;
         window.closeSidebar = closeSidebar;
 
