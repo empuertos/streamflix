@@ -1,7 +1,7 @@
 {
   "name": "StreamFlix - Movies & TV Shows",
   "short_name": "StreamFlix",
-  "description": "Stream thousands of movies and TV shows in HD quality.",
+  "description": "Discover and stream thousands of movies and TV shows in stunning HD quality with StreamFlix.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
@@ -9,11 +9,31 @@
   "orientation": "landscape-primary",
   "categories": ["entertainment", "video"],
   "lang": "en-US",
+  "dir": "ltr",
   "scope": "/",
+  "version": "1.0.0",
   "icons": [
+    {
+      "src": "https://via.placeholder.com/96x96/00FF9D/000?text=SF",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/128x128/00FF9D/000?text=SF",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "https://via.placeholder.com/192x192/00FF9D/000?text=SF",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/256x256/00FF9D/000?text=SF",
+      "sizes": "256x256",
       "type": "image/png",
       "purpose": "any maskable"
     },
@@ -30,6 +50,12 @@
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow"
+    },
+    {
+      "src": "https://via.placeholder.com/1280x720/00FF9D/000?text=Screenshot",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ],
   "shortcuts": [
