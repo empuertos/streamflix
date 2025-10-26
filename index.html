@@ -3865,6 +3865,14 @@
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value.trim();
 
+                // Instantly handle IMDb ID in live search and stop further processing
+                if (/^tt\d{7,}$/.test(query)) {
+                    findAndShowByImdbId(query);
+                    hideLiveSearchResults();
+                    hideSearchSuggestions();
+                    return; // IMPORTANT: Stop further execution
+                }
+
                 // Add typing animation effect
                 if (query.length > 0 && query.length <= 3) {
                     addTypingEffect();
