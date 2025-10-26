@@ -3967,16 +3967,12 @@
                 console.log('Current hero index:', currentHeroIndex);
                 console.log('Current displayed movie:', currentDisplayedMovie?.title);
 
-                const currentMovie = getCurrentDisplayedMovie();
-
-                if (currentMovie && currentMovie.id) {
+                if (currentDisplayedMovie && currentDisplayedMovie.id) {
                     currentMode = 'movie'; // Set mode to movie for hero content
-                    showDetails(currentMovie.id);
+                    showDetails(currentDisplayedMovie.id);
                 } else {
-                    // This is a reference to a variable that is defined later in the code
                     console.error('Current movie or movie ID is missing');
                     console.log('Available movies:', heroMovies.length);
-                    console.log('Current displayed movie:', currentDisplayedMovie);
                     alert('Movie information not available. Please wait for content to load or refresh the page.');
                 }
             });
@@ -3988,16 +3984,13 @@
                 console.log('Current hero index:', currentHeroIndex);
                 console.log('Current displayed movie:', currentDisplayedMovie?.title);
 
-                const currentMovie = getCurrentDisplayedMovie();
-
-                if (currentMovie && currentMovie.id) {
+                if (currentDisplayedMovie && currentDisplayedMovie.id) {
                     currentMode = 'movie'; // Set mode to movie for hero content
-                    currentItem = currentMovie;
-                    playVideo(currentMovie);
+                    currentItem = currentDisplayedMovie;
+                    playVideo(currentDisplayedMovie);
                 } else {
                     console.error('Current movie or movie ID is missing');
                     console.log('Available movies:', heroMovies.length);
-                    console.log('Current displayed movie:', currentDisplayedMovie);
                     alert('Movie information not available. Please wait for content to load or refresh the page.');
                 }
             });
@@ -4703,6 +4696,7 @@
             const backdrop = backdropPath ? `https://image.tmdb.org/t/p/original${backdropPath}` : 'https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg';
 
             // Set the current displayed movie for button synchronization
+            // This is now the single source of truth for the buttons.
             currentDisplayedMovie = movie;
 
             // Update active dot indicator
@@ -4710,19 +4704,39 @@
                 updateHeroDots(currentHeroIndex);
             }
 
-            // Add fade effect
-            const heroElement = document.querySelector('.hero');
-            heroElement.style.opacity = '0.7';
+            // Synchronize buttons by re-attaching listeners with the correct movie
+            moreInfoBtn.onclick = () => {
+                if (currentDisplayedMovie && currentDisplayedMovie.id) {
+                    console.log('More Info for:', currentDisplayedMovie.title);
+                    currentMode = 'movie';
+                    showDetails(currentDisplayedMovie.id);
+                } else {
+                    console.error('Cannot show details, currentDisplayedMovie is invalid.');
+                }
+            };
 
-            setTimeout(() => {
-                document.getElementById('heroTitle').textContent = title;
-                document.getElementById('heroDesc').textContent = overview ? overview.substring(0, 200) + '...' : 'No description available.';
-                heroElement.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdrop}')`;
-                heroElement.style.opacity = '1';
+            startWatchingBtn.onclick = () => {
+                if (currentDisplayedMovie && currentDisplayedMovie.id) {
+                    console.log('Start Watching:', currentDisplayedMovie.title);
+                    currentMode = 'movie';
+                    currentItem = currentDisplayedMovie;
+                    playVideo(currentDisplayedMovie);
+                } else {
+                    console.error('Cannot play video, currentDisplayedMovie is invalid.');
+                }
+            };
 
-                // Update status indicator
-                updateHeroStatus(movie);
-            }, 300);
+            // Add a fade-in effect for the text content
+            const heroContent = document.querySelector('.hero-content');
+            heroContent.style.animation = 'none';
+            void heroContent.offsetWidth; // Trigger reflow
+            heroContent.style.animation = 'heroFadeIn 1.2s ease-out';
+            
+            // Update the hero content
+            document.getElementById('heroTitle').textContent = title;
+            document.getElementById('heroDesc').textContent = overview ? overview.substring(0, 200) + '...' : 'No description available.';
+            document.querySelector('.hero').style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${backdrop}')`;
+            updateHeroStatus(movie);
 
             // Reset progress bar animation
             const progressBar = document.getElementById('heroProgressBar');
@@ -4731,9 +4745,6 @@
                 void progressBar.offsetWidth; // Trigger reflow
                 progressBar.style.animation = 'heroProgress 8s linear';
             }
-
-            // Update index for the *next* slide
-            currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
         }
 
         // Update hero status indicator
@@ -4758,13 +4769,6 @@
                 return;
             }
 
-            // Update hero every 8 seconds
-            slideshowInterval = setInterval(() => {
-                if (heroMovies.length > 0 && !isPaused) {
-                    updateHero();
-                }
-            }, 8000);
-
             // Pause slideshow on hover
             const heroElement = document.querySelector('.hero');
             if (heroElement) {
@@ -4777,21 +4781,29 @@
                 });
             }
 
+            // Update hero every 8 seconds
+            slideshowInterval = setInterval(() => {
+                if (heroMovies.length > 0 && !isPaused) {
+                    nextHeroSlide(true); // Auto-advance
+                }
+            }, 8000);
+
             // Also update hero immediately
             updateHero();
         }
 
         // Manual hero navigation
-        function nextHeroSlide() {
+        function nextHeroSlide(isAuto = false) {
             if (heroMovies.length === 0) return;
-            // The index is already pointing to the next slide, so we just need to trigger the update
+            currentHeroIndex = (currentHeroIndex + 1) % heroMovies.length;
             updateHero();
-            restartHeroSlideshow(); // Reset the timer
+            if (!isAuto) restartHeroSlideshow(); // Reset timer on manual click
         }
 
         function previousHeroSlide() {
             if (heroMovies.length === 0) return;
-            currentHeroIndex = (currentHeroIndex - 2 + heroMovies.length) % heroMovies.length;
+            // Go to the previous index
+            currentHeroIndex = (currentHeroIndex - 1 + heroMovies.length) % heroMovies.length;
             updateHero();
             restartHeroSlideshow(); // Reset the timer
         }
@@ -4827,17 +4839,6 @@
             });
         }
 
-        // Get the currently displayed movie (safe method)
-        function getCurrentDisplayedMovie() {
-            if (heroMovies.length === 0) return null;
-            // currentDisplayedMovie is reliably set by updateHero().
-            // If it's null (e.g., on first load before updateHero runs),
-            // we can safely fall back to the movie at the *previous* index,
-            // which is what would be displayed.
-            const displayedIndex = (currentHeroIndex - 1 + heroMovies.length) % heroMovies.length;
-            return currentDisplayedMovie || heroMovies[displayedIndex];
-        }
-
         // Function to restart slideshow (useful if movies are reloaded)
         function restartHeroSlideshow() {
             console.log('Restarting hero slideshow...');
@@ -4857,7 +4858,7 @@
 
         // Manual sync function for debugging
         function syncButtonsWithDisplay() {
-            const currentMovie = getCurrentDisplayedMovie();
+            const currentMovie = currentDisplayedMovie;
             console.log('Manual sync - Current displayed movie:', currentMovie?.title);
             console.log('Current hero index:', currentHeroIndex);
             console.log('Total hero movies:', heroMovies.length);
@@ -4873,7 +4874,7 @@
 
         // Force refresh of button states
         function refreshButtonStates() {
-            const currentMovie = getCurrentDisplayedMovie();
+            const currentMovie = currentDisplayedMovie;
 
             if (currentMovie) {
                 console.log('Refreshing button states for:', currentMovie.title);
