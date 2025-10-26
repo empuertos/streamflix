@@ -3126,9 +3126,6 @@
             populateRecentlyViewed();
             initializeImageLoading();
 
-            // Set interval to refetch hero movies every 5 minutes
-            setInterval(fetchHeroMovies, 5 * 60 * 1000);
-
             // Set interval to check provider health every 10 minutes
             setInterval(checkProviderHealth, 10 * 60 * 1000);
 
@@ -3136,17 +3133,6 @@
             setTimeout(checkProviderHealth, 5000);
 
             // Start the slideshow after hero movies are loaded with proper delay
-            const startSlideshow = () => {
-                if (heroMovies.length > 0) {
-                    startHeroSlideshow();
-                } else {
-                    setTimeout(startSlideshow, 1000);
-                }
-            };
-
-            // Wait for hero movies to load before starting slideshow
-            setTimeout(startSlideshow, 2000);
-
             // Add a function to refresh all cast information
             window.refreshAllCastInfo = refreshAllCastInfo;
 
