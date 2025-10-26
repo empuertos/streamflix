@@ -190,59 +190,6 @@
         resultsContainer.innerHTML = '';
 
         try {
-            const url = `${API_URL}/find/${imdbId}?external_source=imdb_id`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`API request failed: ${response.statusText}`);
-            }
-            const data = await response.json();
-            const results = [...(data.movie_results || []), ...(data.tv_results || [])];
-
-            if (results.length > 0) {
-                const item = results[0];
-                console.log('Found item by IMDb ID:', item);
-
-                // Render the result
-                const resultElement = document.createElement('div');
-                resultElement.classList.add('result-item');
-                const title = item.title || item.name;
-                const year = (item.release_date || item.first_air_date || '').substring(0, 4);
-                const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : 'https://via.placeholder.com/50x75.png/2a2a2a/ffffff?text=N/A';
-
-                resultElement.innerHTML = `
-                    <img src="${poster}" alt="${title} Poster">
-                    <div class="result-item-info">
-                        <h3>${title}</h3>
-                        <p>${year}</p>
-                    </div>
-                `;
-
-                resultElement.addEventListener('click', () => {
-                    alert(`You selected: ${title}`);
-                    searchInput.value = title;
-                    resultsContainer.style.display = 'none';
-                });
-
-                resultsContainer.appendChild(resultElement);
-            } else {
-                resultsContainer.innerHTML = `<div class="no-results">No results found for IMDb ID: ${imdbId}</div>`;
-            }
-        } catch (error) {
-            console.error('Error finding by IMDb ID:', error);
-            resultsContainer.innerHTML = `<div class="no-results">Error searching for IMDb ID. Please try again.</div>`;
-        } finally {
-            loadingSpinner.style.display = 'none';
-        }
-    }
-
-    // Function to handle IMDb ID search
-    async function findAndShowByImdbId(imdbId) {
-        console.log(`Searching for IMDb ID: ${imdbId}`);
-        loadingSpinner.style.display = 'block';
-        resultsContainer.style.display = 'block';
-        resultsContainer.innerHTML = '';
-
-        try {
             // Use the /find endpoint in the worker
             const url = `${API_URL}/find/${imdbId}?external_source=imdb_id`;
             const response = await fetch(url);
