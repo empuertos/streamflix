@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Movie Search</title>
+    <style>
+        :root {
+            --primary-bg: #141414;
+            --secondary-bg: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --accent-color: #e50914;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            margin: 0;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 100%;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--secondary-bg);
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #searchInput:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.3);
+        }
+
+        #searchInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--text-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+
+        @keyframes spin {
+            to {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        .results-container {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            background-color: var(--secondary-bg);
+            border-radius: var(--border-radius);
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            display: none; /* Hidden by default */
+            z-index: 1000;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .result-item:hover {
+            background-color: #3c3c3c;
+        }
+
+        .result-item img {
+            width: 50px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+            background-color: #1c1c1c;
+        }
+
+        .result-item-info h3 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .result-item-info p {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="search-container">
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search for a movie or TV show...">
+        <div class="spinner" id="loadingSpinner"></div>
+    </div>
+    <div id="resultsContainer" class="results-container"></div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    let debounceTimer;
+
+    // --- Live API Integration ---
+    const API_URL = 'https://streamflix.22afed28-f0b2-46d0-8804-c90e25c90bd4.workers.dev';
+
+    async function fetchMovieData(query) {
+        console.log(`Searching for: ${query}`);
+        if (!query) {
+            return [];
+        }
+
+        // Use the /search/multi endpoint to search for movies and TV shows
+        const url = `${API_URL}/search/multi?query=${encodeURIComponent(query)}`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+            const data = await response.json();
+
+            // Filter out people and map the results to the format our component expects
+            return data.results
+                .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
+                .map(item => ({
+                    id: item.id,
+                    title: item.title || item.name, // Movies have 'title', TV shows have 'name'
+                    year: (item.release_date || item.first_air_date || '').substring(0, 4),
+                    // Use a smaller poster image for the dropdown
+                    poster: item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : 'https://via.placeholder.com/50x75.png/2a2a2a/ffffff?text=N/A'
+                }));
+        } catch (error) {
+            console.error("Failed to fetch movie data:", error);
+            return []; // Return an empty array on error to prevent crashes
+        }
+    }
+
+    function renderResults(results) {
+        resultsContainer.innerHTML = ''; // Clear previous results
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `<div class="no-results">No results found.</div>`;
+        } else {
+            results.forEach(item => {
+                const resultElement = document.createElement('div');
+                resultElement.classList.add('result-item');
+                resultElement.innerHTML = `
+                    <img src="${item.poster}" alt="${item.title} Poster">
+                    <div class="result-item-info">
+                        <h3>${item.title}</h3>
+                        <p>${item.year}</p>
+                    </div>
+                `;
+                // You can add a click event listener to do something when a result is selected
+                resultElement.addEventListener('click', () => {
+                    alert(`You selected: ${item.title}`);
+                    searchInput.value = item.title;
+                    resultsContainer.style.display = 'none';
+                });
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+    }
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const query = searchInput.value.trim();
+
+        if (query) {
+            loadingSpinner.style.display = 'block';
+            resultsContainer.style.display = 'block'; // Show container for loading/no results
+            resultsContainer.innerHTML = ''; // Clear old results immediately
+
+            debounceTimer = setTimeout(async () => {
+                const results = await fetchMovieData(query);
+                loadingSpinner.style.display = 'none';
+                renderResults(results);
+            }, 300); // 300ms debounce delay
+        } else {
+            loadingSpinner.style.display = 'none';
+            resultsContainer.style.display = 'none';
+        }
+    });
+
+    // Hide results when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!searchInput.contains(event.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+
+</script>
+
+</body>
+</html>
