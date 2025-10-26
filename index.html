@@ -2999,20 +2999,14 @@
             <aside class="categories-sidebar"></aside> <!-- Keep this for desktop view, content will be added by JS -->
 
             <main class="content-grid-wrapper" style="flex: 1;">
-                <h2 class="section-title"><i class="fas fa-fire" aria-hidden="true"></i> Popular Now</h2>
-
-                <div class="content-grid" id="contentGrid">
-                    <!-- Content will be loaded here -->
-                </div>
-
-                <div class="loading" id="loading">
+                <h2 class="section-title" id="resultsTitle"><i class="fas fa-fire" aria-hidden="true"></i> Popular Now</h2>
+                <div class="content-grid" id="contentGrid"></div>
+                <div class="loading" id="loading" style="display: none;">
                     <div class="loading-spinner"></div>
-                    <p>Loading content...</p>
+                    <p>Loading more...</p>
                 </div>
             </main>
         </div>
-
-        <button class="btn btn-secondary" id="loadMore" style="display: none; margin: 0 auto;">Load More</button>
     </div>
 
     <!-- Detail Modal -->
@@ -3075,7 +3069,7 @@
         let currentMode = 'movie';
         let currentItem = null;
         let currentHeroIndex = 0;
- 
+        let popularPage = 1;
         // For infinite scroll
         // State for combined filters
         let activeGenre = null;
@@ -3087,9 +3081,6 @@
         const loadingElement = document.getElementById('loading');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
-        const movieModeBtn = document.getElementById('movieMode');
-        const tvModeBtn = document.getElementById('tvMode');
-        const loadMoreBtn = document.getElementById('loadMore');
         const detailModal = document.getElementById('detailModal');
         const closeModal = document.getElementById('closeModal');
         const modalTitle = document.getElementById('modalTitle');
@@ -3541,6 +3532,7 @@
 
         async function applyFiltersAndFetch() {
             // Clear the grid immediately for better UX
+            updateResultsTitle(0); // Show title for filters
             contentGrid.innerHTML = '';
             currentPage = 1; // Reset page on new filter
 
@@ -3615,6 +3607,7 @@
             activeYear = null;
 
             // Remove active classes from all filter items
+            updateResultsTitle(); // Reset title to default
             document.querySelectorAll('.category-item.active, .year-item.active').forEach(el => el.classList.remove('active'));
 
             // Fetch default content
@@ -3681,7 +3674,7 @@
             if (desktopContainer) desktopContainer.innerHTML = recentlyViewed.map(item => createRecentItem(item).outerHTML).join('');
         }
 
-        // Setup infinite scroll
+        // Setup infinite scroll for the main content grid
         function setupInfiniteScroll() {
             const observer = new IntersectionObserver(
                 (entries) => {
@@ -3694,12 +3687,20 @@
             );
 
             // The loading element at the bottom of the grid will act as the trigger
-            observer.observe(loadingElement);
+            if (loadingElement) {
+                observer.observe(loadingElement);
+            }
         }
 
         function loadMore() {
             currentPage++;
-            fetchContent(true); // Pass true to indicate it's a "load more" action
+            if (currentQuery || activeGenre || activeYear) {
+                // If filters/search are active, load more of those results
+                applyFiltersAndFetch(true);
+            } else {
+                // Otherwise, load more popular content
+                fetchContent(true);
+                }
         }
         function addSearchEnhancements() {
             // Add search hint
@@ -3947,15 +3948,6 @@
             if(desktopMovieModeBtn) desktopMovieModeBtn.addEventListener('click', () => switchMode('movie'));
             if(desktopTvModeBtn) desktopTvModeBtn.addEventListener('click', () => switchMode('tv'));
             
-            closeModal.addEventListener('click', () => detailModal.style.display = 'none');
-
-            // Close modals when clicking outside
-            detailModal.addEventListener('click', (e) => {
-                if (e.target === detailModal) {
-                    detailModal.style.display = 'none';
-                }
-            });
-
             trailerModal.addEventListener('click', (e) => {
                 if (e.target === trailerModal) {
                     trailerModal.style.display = 'none';
@@ -3966,11 +3958,6 @@
             closeTrailer.addEventListener('click', () => {
                 trailerModal.style.display = 'none';
                 trailerVideo.src = '';
-            });
-
-            // Watch button in modal
-            watchBtn.addEventListener('click', () => {
-                playVideo(currentItem);
             });
 
             // More Info button - show details for current hero movie
@@ -4029,6 +4016,7 @@
             if (query) {
                 currentQuery = query;
                 currentPage = 1;
+                updateResultsTitle(0, query);
                 hideLiveSearchResults();
                 hideSearchSuggestions();
                 // Replace main content with search results
@@ -4055,7 +4043,7 @@
                 }
                 
                 displayContent(searchResults);
-                updateSearchResultsCounter(searchResults.length);
+                updateResultsTitle(searchResults.length, query);
             } catch (error) {
                 console.error('Error performing full search:', error);
                 contentGrid.innerHTML = `<p style="color: var(--accent); text-align: center;">Could not perform search. Please try again.</p>`;
@@ -4590,53 +4578,31 @@
         document.head.appendChild(sparklePulseStyle);
 
         function updateSearchResultsCounter(resultCount) {
-            let counter = document.getElementById('searchResultsCounter');
-
-            if (!counter) {
-                counter = document.createElement('div');
-                counter.id = 'searchResultsCounter';
-                counter.className = 'search-results-counter';
-                document.querySelector('.content-grid-wrapper').insertBefore(counter, document.querySelector('.content-grid'));
-            }
-
-            if (currentQuery) {
-                const itemText = resultCount === 1 ? 'result' : 'results';
-                counter.innerHTML = `
-                    <div style="background: var(--dark); padding: 15px 25px; margin-bottom: 25px; border-radius: 10px; border-left: 4px solid var(--primary); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);">
-                        <i class="fas fa-search" style="color: var(--primary); margin-right: 10px;" aria-hidden="true"></i>
-                        Found <strong>${resultCount}</strong> ${itemText}
-                        for <strong>"${currentQuery}"</strong>
-                    </div>
-                `;
-                counter.style.display = 'block';
-            } else {
-                counter.style.display = 'none';
-            }
+            // This function is deprecated in favor of updateResultsTitle
+            updateResultsTitle(resultCount, currentQuery);
         }
 
         // Switch between movie and TV mode
         function switchMode(mode) {
+            if (currentMode === mode) return; // Do nothing if mode is the same
             currentMode = mode;
             currentPage = 1;
+            currentQuery = '';
             contentGrid.innerHTML = '';
             // Reset filters when switching main mode
             activeGenre = null;
             activeYear = null;
+            updateResultsTitle(); // Reset title
             document.querySelectorAll('.category-item.active, .year-item.active').forEach(el => el.classList.remove('active'));
 
             // Update active buttons in both sidebars
-            movieModeBtn.classList.toggle('active', mode === 'movie');
-            tvModeBtn.classList.toggle('active', mode === 'tv');
+            document.querySelectorAll('#sidebarMoviesBtn, #desktopMovieMode').forEach(btn => {
+                if(btn) btn.classList.toggle('active', mode === 'movie');
+            });
+            document.querySelectorAll('#sidebarTvBtn, #desktopTvMode').forEach(btn => {
+                if(btn) btn.classList.toggle('active', mode === 'tv');
+            });
             
-            const desktopMovieModeBtn = document.getElementById('desktopMovieMode');
-            const desktopTvModeBtn = document.getElementById('desktopTvMode');
-            if (desktopMovieModeBtn) {
-                desktopMovieModeBtn.classList.toggle('active', mode === 'movie');
-            }
-            if (desktopTvModeBtn) {
-                desktopTvModeBtn.classList.toggle('active', mode === 'tv');
-            }
-
             fetchContent();
         }
 
@@ -4645,43 +4611,40 @@
             if (isFetching) return;
             isFetching = true;
 
-            loadingElement.style.display = 'block';
+            if (loadingElement) loadingElement.style.display = 'block';
 
             try {
-                if (activeGenre || activeYear) {
-                    // If filters are active, use the filter function
-                    // The 'isLoadMore' flag is not used here as applyFiltersAndFetch has its own pagination logic
-                    await applyFiltersAndFetch(); 
+                const endpoint = `${API_URL}/${currentMode}/popular?page=${currentPage}`;
+                const response = await fetch(endpoint);
+                const data = await response.json();
+
+                if (isLoadMore) {
+                    appendContent(data.results);
                 } else {
-                    // Otherwise, fetch popular content for the current mode
-                    const endpoint = `${API_URL}/${currentMode}/popular?page=${currentPage}`;
-                    const response = await fetch(endpoint);
-                    const data = await response.json();
-
-                    if (isLoadMore) {
-                        appendContent(data.results);
-                    } else {
-                        displayContent(data.results);
-                    }
-
-                    if (data.page >= data.total_pages) {
-                        // Hide loading spinner if there are no more pages
-                        loadingElement.style.display = 'none';
-                    }
+                    displayContent(data.results);
                 }
+
+                if (data.page >= data.total_pages) {
+                    if (loadingElement) loadingElement.style.display = 'none';
+                }
+
+                initializeImageLoading();
             } catch (error) {
                 console.error('Error fetching content:', error);
                 contentGrid.innerHTML = '<p>Error loading content. Please try again later.</p>';
             } finally {
                 isFetching = false;
-                loadingElement.style.display = 'none';
+                if (!isLoadMore && loadingElement) {
+                    // Hide loader after initial load if there are more pages, it will be shown again by observer
+                    loadingElement.style.display = 'none';
+                }
             }
         }
 
         // Fetch hero movies
         async function fetchHeroMovies() {
             try {
-                const response = await fetch(`${API_URL}/movie/popular?page=1`);
+                const response = await fetch(`${API_URL}/movie/now_playing?page=1`);
                 const data = await response.json();
                 const newHeroMovies = data.results.slice(0, 10);
 
@@ -4718,6 +4681,11 @@
 
             // Set the current displayed movie for button synchronization
             currentDisplayedMovie = movie;
+
+            // Update active dot indicator
+            if (typeof updateHeroDots === 'function') {
+                updateHeroDots(currentHeroIndex);
+            }
 
             // Add fade effect
             const heroElement = document.querySelector('.hero');
@@ -4805,6 +4773,37 @@
             restartHeroSlideshow(); // Reset the timer
         }
 
+        // Create hero dot indicators
+        function createHeroDots() {
+            const dotsContainer = document.getElementById('heroDots');
+            if (!dotsContainer) return;
+
+            dotsContainer.innerHTML = '';
+            heroMovies.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'hero-dot';
+                dot.setAttribute('data-index', index);
+                dot.addEventListener('click', () => {
+                    currentHeroIndex = index;
+                    updateHero();
+                    restartHeroSlideshow();
+                });
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        // Update active hero dot
+        function updateHeroDots(activeIndex) {
+            const dots = document.querySelectorAll('.hero-dot');
+            dots.forEach((dot, index) => {
+                if (index === activeIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
         // Get the currently displayed movie (safe method)
         function getCurrentDisplayedMovie() {
             if (heroMovies.length === 0) return null;
@@ -4870,6 +4869,7 @@
 
         // Display content in the grid
         function displayContent(items) {
+            contentGrid.innerHTML = ''; // Clear main grid before displaying search/filter results
             if (items.length === 0) {
                 const searchTerm = searchInput.value.trim();
                 contentGrid.innerHTML = ` 
@@ -4885,63 +4885,11 @@
                 return;
             }
 
-            items.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'content-card';
-
-                const title = currentMode === 'movie' ? item.title : item.name;
-                const date = currentMode === 'movie' ? item.release_date : item.first_air_date;
-                const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
-
-                // Get current search term for highlighting
-                const searchTerm = searchInput.value.trim();
-                const highlightedTitle = highlightSearchTerm(title, searchTerm);
-
-                // Enhanced card with better metadata
-                const year = date ? new Date(date).getFullYear() : 'N/A';
-                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-                const type = currentMode === 'movie' ? 'Movie' : 'TV Show';
-
-                card.innerHTML = `
-                    <img src="${posterPath}" alt="${title}" class="card-img">
-                    <div class="card-content">
-                        <h3 class="card-title">${highlightedTitle}</h3>
-                        <div class="card-info">
-                            <span class="year-badge">${year}</span>
-                            <span class="rating-badge"><i class="fas fa-star" aria-hidden="true"></i> ${rating}</span>
-                            <span class="type-badge">${type}</span>
-                        </div>
-                        ${item.overview ? `<p class="card-overview">${truncateText(highlightSearchTerm(item.overview, searchTerm), 120)}</p>` : ''}
-                        <div class="card-cast" id="cast-${item.id}" style="margin-top: 10px; min-height: 40px;">
-                            <div class="cast-loading" style="display: flex; align-items: center; gap: 8px; color: #999; font-size: 0.75rem;">
-                                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                                <span>Loading cast & crew...</span>
-                            </div>
-                        </div>
-                        <button class="watch-btn-card" data-item-id="${item.id}">
-                            <i class="fas fa-play" aria-hidden="true"></i> Watch Now
-                        </button>
-                    </div>
-                `;
-
-                // Load cast information for this item (with slight delay to prevent overwhelming the API)
-                setTimeout(() => {
-                    loadCastInfo(item.id, item.type || currentMode);
-                }, index * 100); // Stagger the requests
-
-                // Add event listener for watch button
-                const watchBtnCard = card.querySelector('.watch-btn-card');
-                watchBtnCard.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    playVideo(item);
-                });
-
-                card.addEventListener('click', () => {
-                    showDetails(item.id);
-                });
-
+            items.forEach(item => {
+                const card = createContentCard(item);
                 contentGrid.appendChild(card);
             });
+            initializeImageLoading();
         }
 
         // Append content to the grid for infinite scroll
@@ -4956,6 +4904,59 @@
                 }, index * 100);
             });
             initializeImageLoading(); // Re-initialize for new images
+        }
+
+        // Reusable function to create a content card
+        function createContentCard(item) {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+
+            const title = item.title || item.name;
+            const date = item.release_date || item.first_air_date;
+            const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/300x450/1a1a2e/00FF9D?text=No+Image';
+            const itemType = item.media_type || currentMode;
+
+            const searchTerm = searchInput.value.trim();
+            const highlightedTitle = highlightSearchTerm(title, searchTerm);
+
+            const year = date ? new Date(date).getFullYear() : 'N/A';
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+            const type = itemType === 'movie' ? 'Movie' : 'TV Show';
+
+            card.innerHTML = `
+                <img src="${posterPath}" alt="${title}" class="card-img">
+                <div class="card-content">
+                    <h3 class="card-title">${highlightedTitle}</h3>
+                    <div class="card-info">
+                        <span class="year-badge">${year}</span>
+                        <span class="rating-badge"><i class="fas fa-star" aria-hidden="true"></i> ${rating}</span>
+                        <span class="type-badge">${type}</span>
+                    </div>
+                    ${item.overview ? `<p class="card-overview">${truncateText(highlightSearchTerm(item.overview, searchTerm), 120)}</p>` : ''}
+                    <div class="card-cast" id="cast-${item.id}" style="margin-top: 10px; min-height: 40px;">
+                        <div class="cast-loading" style="display: flex; align-items: center; gap: 8px; color: #999; font-size: 0.75rem;">
+                            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                            <span>Loading cast...</span>
+                        </div>
+                    </div>
+                    <button class="watch-btn-card" data-item-id="${item.id}">
+                        <i class="fas fa-play" aria-hidden="true"></i> Watch Now
+                    </button>
+                </div>
+            `;
+
+            setTimeout(() => {
+                loadCastInfo(item.id, itemType);
+            }, 100);
+
+            const watchBtnCard = card.querySelector('.watch-btn-card');
+            watchBtnCard.addEventListener('click', (e) => {
+                e.stopPropagation();
+                playVideo(item);
+            });
+
+            card.addEventListener('click', () => showDetails(item.id));
+            return card;
         }
 
         // Load cast information for a movie/TV show
@@ -5136,6 +5137,23 @@
                 // Load cast and crew information
                 loadCastAndCrew(itemId, currentMode);
 
+                // Ensure close button and outside click events are attached every time
+                const closeModalBtn = document.getElementById('closeModal');
+                closeModalBtn.onclick = () => {
+                    detailModal.style.display = 'none';
+                    stopVideo();
+                };
+
+                detailModal.onclick = (e) => {
+                    if (e.target === detailModal) {
+                        detailModal.style.display = 'none';
+                        stopVideo();
+                    }
+                };
+
+                // Prevent clicks inside the content from closing the modal
+                document.querySelector('.modal-content').onclick = (e) => e.stopPropagation();
+
                 detailModal.style.display = 'block';
             } catch (error) {
                 console.error('Error showing details:', error);
@@ -5253,6 +5271,11 @@
             // Insert cast info after the overview
             const watchBtn = modalDetails.querySelector('.watch-btn');
             if (watchBtn) {
+                // Re-attach event listener for the watch button inside the modal
+                watchBtn.onclick = () => {
+                    playVideo(currentItem);
+                };
+
                 modalDetails.insertBefore(castInfoDiv, watchBtn);
             } else {
                 modalDetails.appendChild(castInfoDiv);
@@ -5718,6 +5741,7 @@
 
             // Show the video modal and start loading first provider
             videoModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
             const firstProvider = providerButtons.querySelector('.provider-btn-small')?.dataset.provider || 'alpha';
             if (firstProvider) loadProvider(firstProvider);
         }
@@ -5725,14 +5749,15 @@
         // Function to stop video and audio
         function stopVideo() {
             const streamIframe = document.getElementById('streamIframe');
-            if (streamIframe && streamIframe.parentNode) {
-                const newIframe = streamIframe.cloneNode();
-                streamIframe.parentNode.replaceChild(newIframe, streamIframe);
+            if (streamIframe) {
+                streamIframe.src = 'about:blank'; // Effectively stops video and audio
+                console.log('Video iframe source cleared to stop playback.');
             }
             const videoLoading = document.getElementById('videoLoading');
             if (videoLoading) {
-                videoLoading.style.display = 'flex';
+                videoLoading.style.display = 'none'; // Hide loading indicator
             }
+            document.body.style.overflow = ''; // Restore background scrolling
         }
 
         // Add typing animation effect
