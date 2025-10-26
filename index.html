@@ -2945,23 +2945,27 @@
                     <span>TV Shows</span>
                 </button>
                 <div class="sidebar-divider"></div>
-                <button id="sidebarSearchBtn" class="sidebar-nav-btn">
-                    <i class="fas fa-search"></i>
-                    <span>Search</span>
-                </button>
-                <button id="sidebarGenresBtn" class="sidebar-nav-btn">
-                    <i class="fas fa-th-large"></i>
-                    <span>Genres</span>
-                </button>
-                <button id="sidebarYearsBtn" class="sidebar-nav-btn">
-                    <i class="fas fa-calendar"></i>
-                    <span>Years</span>
-                </button>
-                <div class="sidebar-divider"></div>
+                <!-- Movie Genres -->
+                <div class="categories-section">
+                    <h4><i class="fas fa-film" aria-hidden="true"></i> Movie Genres</h4>
+                    <div class="category-list" id="movieCategories"></div>
+                </div>
+                <!-- TV Show Genres -->
+                <div class="categories-section">
+                    <h4><i class="fas fa-tv" aria-hidden="true"></i> TV Show Genres</h4>
+                    <div class="category-list" id="tvCategories"></div>
+                </div>
+                <!-- Year Filter -->
+                <div class="categories-section">
+                    <h4><i class="fas fa-calendar-alt" aria-hidden="true"></i> By Year</h4>
+                    <div class="year-list" id="yearCategories"></div>
+                </div>
+
                 <button id="clearFiltersMobile" class="clear-filters-btn">
                     <i class="fas fa-times-circle"></i>
                     <span>Clear Filters</span>
                 </button>
+
                 <div class="sidebar-divider"></div>
                 <div class="categories-section">
                     <h4><i class="fas fa-history" aria-hidden="true"></i> Recently Viewed</h4>
