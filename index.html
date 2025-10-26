@@ -3912,6 +3912,12 @@
                     inset 0 0 20px rgba(0, 255, 157, 0.1)
                 `;
 
+                // On mobile, open the full-screen search overlay
+                if (window.innerWidth <= 768) {
+                    openMobileSearch();
+                    return; // Prevent desktop logic from running
+                }
+
                 // Add breathing animation to search container
                 const searchContainer = searchInput.parentNode;
                 searchContainer.style.animation = 'breathe 2s ease-in-out infinite';
@@ -4012,13 +4018,22 @@
         // Handle search
         function handleSearch() {
             const query = searchInput.value.trim();
+            hideLiveSearchResults();
+            hideSearchSuggestions();
             contentGrid.innerHTML = ''; // Clear previous results immediately
+
             if (query) {
+                // Check if the query is an IMDb ID (e.g., tt14979052)
+                if (/^tt\d+$/.test(query)) {
+                    console.log('IMDb ID detected, finding by ID:', query);
+                    findAndShowByImdbId(query);
+                    return; // Stop normal search
+                }
+
+                // Proceed with normal keyword search
                 currentQuery = query;
                 currentPage = 1;
                 updateResultsTitle(0, query);
-                hideLiveSearchResults();
-                hideSearchSuggestions();
                 // Replace main content with search results
                 performFullSearch(query, currentMode);
             }
@@ -4268,6 +4283,13 @@
                 return;
             }
 
+            // Instantly handle IMDb ID in live search
+            if (/^tt\d+$/.test(query)) {
+                findAndShowByImdbId(query);
+                hideLiveSearchResults(); // Hide dropdown since we are showing details directly
+                return;
+            }
+
             // Show loading state
             showSearchLoading(true);
 
@@ -4283,7 +4305,7 @@
                       .slice(0, 8) // Show top 8 results
                       .map(result => result.item);
                     
-                    displayLiveSearchResults(scoredResults, query);
+                    displayLiveSearchResults(scoredResults, query); // This will handle desktop
 
                     // Also update mobile overlay if visible
                     if (document.getElementById('mobileSearchOverlay').style.display === 'flex') {
@@ -4292,7 +4314,7 @@
                             mobileResultsContainer.innerHTML = `<div class="live-results-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                                 ${scoredResults.map(item => createLiveResultCard(item, query)).join('')}</div>`;
                         } else {
-                            mobileResultsContainer.innerHTML = `<div class="no-live-results" style="padding: 30px; text-align: center; color: #ccc;"><p>No results for "${query}"</p></div>`;
+                            mobileResultsContainer.innerHTML = `<div class="no-live-results" style="padding: 30px; text-align: center; color: #ccc;"><p>No results for "${escapeHTML(query)}"</p></div>`;
                         }
                     }
 
@@ -4348,7 +4370,7 @@
                 resultsContainer.innerHTML = `
                     <div class="no-live-results" style="padding: 30px; text-align: center; color: #ccc;">
                         <i class="fas fa-search" style="font-size: 32px; color: var(--primary); margin-bottom: 15px;" aria-hidden="true"></i>
-                        <p>No results found for "${query}"</p>
+                        <p>No results found for "${escapeHTML(query)}"</p>
                         <small>Try different keywords or check spelling</small>
                     </div>
                 `;
@@ -4362,7 +4384,7 @@
             const posterPath = item.poster_path ? `${IMG_URL}${item.poster_path}` : 'https://via.placeholder.com/60x90/1a1a2e/00FF9D?text=N/A';
             const type = item.media_type === 'movie' ? 'Movie' : (item.media_type === 'tv' ? 'TV Show' : 'Person');
             const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-
+            
             return `
                 <div class="live-result-card" style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.2s; display: flex; gap: 12px;"
                      onclick="selectLiveResult('${item.type}', ${item.id})">
@@ -4389,6 +4411,7 @@
         function selectLiveResult(type, id) {
             currentMode = (type === 'movie' || type === 'tv') ? type : currentMode;
             showDetails(id);
+            closeMobileSearch(); // Close mobile overlay after selection
             hideLiveSearchResults();
             hideSearchSuggestions();
         }
@@ -4434,7 +4457,7 @@
             if (suggestions.length > 0) {
                 suggestionsContainer.innerHTML = suggestions.map(suggestion => `
                     <div class="search-suggestion" onclick="selectSuggestion('${suggestion.replace(/'/g, "\\'")}')">
-                        <i class="fas fa-search" aria-hidden="true"></i> ${highlightSearchTerm(suggestion, searchTerm)}
+                        <i class="fas fa-search" aria-hidden="true"></i> ${highlightSearchTerm(escapeHTML(suggestion), searchTerm)}
                     </div>
                 `).join('');
                 suggestionsContainer.style.display = 'block';
@@ -4482,6 +4505,12 @@
 
             const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function escapeHTML(str) {
+            const p = document.createElement("p");
+            p.textContent = str;
+            return p.innerHTML;
         }
 
         function showSearchLoading(show) {
@@ -5890,6 +5919,96 @@
                 sidebarOverlay.classList.remove('open');
                 hamburgerMenu.classList.remove('active');
                 document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+
+        // New function to handle searching by IMDb ID
+        async function findAndShowByImdbId(imdbId) {
+            console.log(`Searching for IMDb ID: ${imdbId}`);
+            showSearchLoading(true);
+            contentGrid.innerHTML = ''; // Clear the grid
+            updateResultsTitle(0, `IMDb ID: ${imdbId}`);
+
+            try {
+                const endpoint = `${API_URL}/find/${imdbId}?external_source=imdb_id`;
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const results = [...(data.movie_results || []), ...(data.tv_results || [])];
+
+                if (results.length > 0) {
+                    const item = results[0];
+                    console.log('Found item by IMDb ID:', item);
+                    // The /find endpoint doesn't include media_type, so we determine it
+                    currentMode = item.release_date ? 'movie' : 'tv';
+                    // Show the details page for the found item directly
+                    showDetails(item.id);
+                } else {
+                    console.log('No results found for IMDb ID:', imdbId);
+                    contentGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #ccc; background: var(--dark); border-radius: 15px;">
+                            <i class="fas fa-film" style="font-size: 64px; color: var(--accent); margin-bottom: 30px;" aria-hidden="true"></i>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">IMDb ID Not Found</h3>
+                            <p style="font-size: 1.1rem;">We couldn't find a movie or TV show with the ID: <strong>${imdbId}</strong></p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error finding by IMDb ID:', error);
+                contentGrid.innerHTML = `<p style="color: var(--accent); text-align: center;">Error searching for IMDb ID. Please try again.</p>`;
+            } finally {
+                showSearchLoading(false);
+            }
+        }
+
+        // --- Mobile Search Overlay Functions ---
+        function openMobileSearch() {
+            // Prevent creating multiple overlays
+            if (document.getElementById('mobileSearchOverlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'mobileSearchOverlay';
+            overlay.className = 'mobile-search-overlay';
+
+            overlay.innerHTML = `
+                <div class="mobile-search-header">
+                    <input type="text" class="search-box mobile-search-input" id="mobileSearchInput" placeholder="Search movies, TV shows...">
+                    <button class="mobile-search-close" id="mobileSearchClose">&times;</button>
+                </div>
+                <div id="mobileSearchResults" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
+            `;
+
+            document.body.appendChild(overlay);
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            const mobileInput = document.getElementById('mobileSearchInput');
+            const mobileCloseBtn = document.getElementById('mobileSearchClose');
+
+            mobileInput.focus();
+
+            mobileInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                if (query) {
+                    showLiveSearchResults(query);
+                } else {
+                    document.getElementById('mobileSearchResults').innerHTML = '';
+                }
+            });
+
+            mobileCloseBtn.addEventListener('click', closeMobileSearch);
+        }
+
+        function closeMobileSearch() {
+            const overlay = document.getElementById('mobileSearchOverlay');
+            if (overlay) {
+                overlay.remove();
+                document.body.style.overflow = '';
             }
         }
 
