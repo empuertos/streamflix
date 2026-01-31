@@ -143,5 +143,40 @@
             document.getElementById('episodeSelect').innerHTML = eHtml;
         }
     </script>
+// Sidebar Toggle Logic
+const hamburgerMenu = document.getElementById('hamburgerMenu');
+const sidebar = document.getElementById('sidebar');
+
+if (hamburgerMenu && sidebar) {
+    hamburgerMenu.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebar.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        hamburgerMenu.classList.toggle('active');
+    });
+}
+
+// Year Filtering Logic
+function filterByYear(year, event = null) {
+    console.log('Filtering by year:', year);
+    // Alisin ang active class sa lahat
+    document.querySelectorAll('.year-item').forEach(item => item.classList.remove('active'));
+    
+    // I-activate ang piniling taon
+    if (event) {
+        event.currentTarget.classList.add('active');
+    }
+    
+    // Dito ilalagay ang pag-fetch ng data base sa taon
+    applyFiltersAndFetch(); 
+    closeSidebar(); 
+}
+
+function closeSidebar() {
+    if (sidebar) {
+        sidebar.classList.remove('open');
+        sidebar.style.display = 'none';
+        hamburgerMenu.classList.remove('active');
+    }
+}
 </body>
 </html>
