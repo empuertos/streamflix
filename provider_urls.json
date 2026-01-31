@@ -1,15 +1,24 @@
+function stopVideo() {
+    const streamIframe = document.getElementById('streamIframe');
+    if (streamIframe) {
+        streamIframe.src = 'about:blank'; // Pinapatigil nito ang video at audio
+        console.log('Video stopped.');
+    }
+    document.body.style.overflow = ''; // Ibalik ang scrolling ng page
+}
 
-{
-  "movie": {
-    "vidsrc": "https://vidsrc.cc/v2/embed/movie/{ID}",
-    "vidlink": "https://vidlink.pro/movie/{ID}",
-    "vidsrc.to": "https://vidsrc.to/embed/movie/{ID}",
-    "multiembed": "https://multiembed.mov/?video_id={ID}"
-  },
-  "tv": {
-    "vidsrc": "https://vidsrc.cc/v2/embed/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidlink": "https://vidlink.pro/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidsrc.to": "https://vidsrc.to/embed/tv/{ID}/{SEASON}/{EPISODE}",
-    "multiembed": "https://multiembed.mov/?video_id={ID}&s={SEASON}&e={EPISODE}"
-  }
+async function loadProvider(providerName, id, type) {
+    const videoLoading = document.getElementById('videoLoading');
+    videoLoading.style.display = 'flex';
+    
+    // Halimbawa ng pag-construct ng URL base sa provider_urls.json
+    // Ang {ID} ay papalitan ng TMDB o IMDb ID
+    const url = `https://vidsrc.to/embed/${type}/${id}`; 
+    
+    const streamIframe = document.getElementById('streamIframe');
+    streamIframe.src = url;
+    
+    streamIframe.onload = () => {
+        videoLoading.style.display = 'none';
+    };
 }
