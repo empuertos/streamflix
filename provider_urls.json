@@ -1,35 +1,15 @@
+
 {
   "movie": {
-    "111movies": "https://111movies.com/movie/{ID}",
-    "autoembed.pro": "https://autoembed.pro/embed/movie/{ID}",
-    "moviemaze.cc": "https://moviemaze.cc/watch/movie/{ID}",
-    "videasy": "https://player.videasy.net/movie/{ID}",
-    "vidfast": "https://vidfast.pro/movie/{ID}",
-    "vidking.net": "https://www.vidking.net/embed/movie/{ID}",
-    "vidlink": "https://vidlink.pro/movie/{ID}",
-    "vidora.su": "https://vidora.su/movie/{ID}",
-    "vidplus.to": "https://player.vidplus.to/embed/movie/{ID}",
     "vidsrc": "https://vidsrc.cc/v2/embed/movie/{ID}",
+    "vidlink": "https://vidlink.pro/movie/{ID}",
     "vidsrc.to": "https://vidsrc.to/embed/movie/{ID}",
-    "vidzee": "https://player.vidzee.wtf/embed/movie/{ID}",
-    "vidzee-4k": "https://player.vidzee.wtf/embed/movie/4k/{ID}",
-    "vixsrc.to": "https://vixsrc.to/movie/{ID}/",
     "multiembed": "https://multiembed.mov/?video_id={ID}"
   },
   "tv": {
-    "111movies": "https://111movies.com/tv/{ID}/{SEASON}/{EPISODE}",
-    "autoembed.pro": "https://autoembed.pro/embed/tv/{ID}&season={SEASON}&episode={EPISODE}",
-    "moviemaze.cc": "https://moviemaze.cc/watch/tv/{ID}?ep={EPISODE}&season={SEASON}",
-    "videasy": "https://player.videasy.net/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidfast": "https://vidfast.pro/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidking.net": "https://www.vidking.net/embed/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidlink": "https://vidlink.pro/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidora.su": "https://vidora.su/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidplus.to": "https://player.vidplus.to/embed/tv/{ID}/{SEASON}/{EPISODE}",
     "vidsrc": "https://vidsrc.cc/v2/embed/tv/{ID}/{SEASON}/{EPISODE}",
+    "vidlink": "https://vidlink.pro/tv/{ID}/{SEASON}/{EPISODE}",
     "vidsrc.to": "https://vidsrc.to/embed/tv/{ID}/{SEASON}/{EPISODE}",
-    "vidzee": "https://player.vidzee.wtf/embed/tv/{ID}/{SEASON}/{EPISODE}",
-    "vixsrc.to": "https://vixsrc.to/tv/{ID}/{SEASON}/{EPISODE}/",
     "multiembed": "https://multiembed.mov/?video_id={ID}&s={SEASON}&e={EPISODE}"
   }
 }
