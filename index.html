@@ -3,164 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00FF9D">
     <title>StreamFlix - Movies & TV Shows</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Ibinabalik ang iyong Original Styling */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         :root {
             --primary: #00FF9D;
+            --primary-gradient: linear-gradient(135deg, #00FF9D 0%, #00cc7a 100%);
             --secondary: #1a1a2e;
             --dark: #16213e;
+            --darker: #0f1419;
             --text: #e6e6e6;
-            --accent: #ff2e63;
         }
-        body { background-color: var(--secondary); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; }
-        header { background: var(--dark); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo h1 { color: var(--primary); margin: 0; }
-        .search-container { display: flex; gap: 10px; }
-        input { padding: 10px; border-radius: 5px; border: none; width: 250px; }
-        .container { padding: 2rem; }
-        .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .card { background: var(--dark); border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.3s; }
-        .card:hover { transform: scale(1.05); }
-        .card img { width: 100%; height: 300px; object-fit: cover; }
-        .card-info { padding: 10px; }
+        body { background-color: var(--secondary); color: var(--text); }
         
-        /* Modal Styles */
-        #detailModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; }
-        .modal-content { max-width: 1000px; margin: 50px auto; background: var(--secondary); border-radius: 15px; padding: 20px; position: relative; }
-        .close-btn { position: absolute; right: 20px; top: 20px; font-size: 2rem; cursor: pointer; color: var(--primary); }
-        iframe { width: 100%; height: 500px; border: none; border-radius: 10px; margin-top: 20px; }
-        .tv-controls { margin: 15px 0; display: flex; gap: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; }
-        select { padding: 8px; border-radius: 5px; background: var(--dark); color: white; border: 1px solid var(--primary); }
+        /* Fixed Video Container */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: none;
+        }
+
+        /* TV Controls Styling */
+        .tv-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--dark);
+            border-radius: 8px;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            background: var(--darker);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="logo"><h1>StreamFlix</h1></div>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search movies or TV shows...">
-    </div>
-</header>
+    <header style="padding: 20px; background: var(--darker); display: flex; justify-content: space-between;">
+        <h1 style="color: var(--primary);">StreamFlix</h1>
+    </header>
 
-<div class="container">
-    <div class="content-grid" id="contentGrid">
-        </div>
-</div>
-
-<div id="detailModal">
-    <div class="modal-content">
-        <span class="close-btn" id="closeModal">&times;</span>
-        <h2 id="modalTitle">Loading...</h2>
-        
-        <div id="tvSelectors" class="tv-controls" style="display: none;">
-            <div>
-                <label>Season: </label>
-                <select id="seasonSelect"></select>
+    <main style="padding: 20px;">
+        <div id="playerSection">
+            <div class="video-container">
+                <iframe id="mainPlayer" src="" allowfullscreen></iframe>
             </div>
-            <div>
-                <label>Episode: </label>
-                <select id="episodeSelect"></select>
+
+            <div id="tvSelectors" class="tv-controls" style="display: none;">
+                <div class="control-group">
+                    <label>Season</label>
+                    <select id="seasonSelect"></select>
+                </div>
+                <div class="control-group">
+                    <label>Episode</label>
+                    <select id="episodeSelect"></select>
+                </div>
             </div>
         </div>
 
-        <div id="playerContainer">
-            <iframe id="streamIframe" allowfullscreen src=""></iframe>
-        </div>
-        
-        <div style="margin-top: 20px;">
-            <p id="modalDesc"></p>
-        </div>
-    </div>
-</div>
+        <div id="contentGrid" class="grid">
+            </div>
+    </main>
 
-<script>
-    let currentItem = null;
-    let currentType = 'movie'; // 'movie' or 'tv'
-    let currentProvider = 'vidsrc'; // Default provider
+    <script>
+        let currentContentId = '';
+        let currentContentType = ''; // 'movie' or 'tv'
+        let currentProvider = 'vidsrc'; // Default base sa json mo
 
-    // Elements
-    const contentGrid = document.getElementById('contentGrid');
-    const detailModal = document.getElementById('detailModal');
-    const streamIframe = document.getElementById('streamIframe');
-    const tvSelectors = document.getElementById('tvSelectors');
-    const seasonSelect = document.getElementById('seasonSelect');
-    const episodeSelect = document.getElementById('episodeSelect');
-
-    // REPAIRED: Core function to build the video URL and play it
-    async function playVideo(provider, id, type) {
-        const season = seasonSelect.value || '1';
-        const episode = episodeSelect.value || '1';
-
-        try {
-            const response = await fetch('provider_urls.json');
-            const providers = await response.json();
+        // REPAIRED PLAYBACK LOGIC
+        async function loadVideo() {
+            const season = document.getElementById('seasonSelect').value || '1';
+            const episode = document.getElementById('episodeSelect').value || '1';
             
-            let urlTemplate = providers[type][provider];
-            
-            // Replace placeholders based on content type
-            let finalUrl = urlTemplate.replace('{ID}', id);
-            
+            try {
+                const response = await fetch('provider_urls.json');
+                const providers = await response.json();
+                
+                let url = providers[currentContentType][currentProvider];
+                
+                // Replace placeholders
+                url = url.replace('{ID}', currentContentId);
+                if (currentContentType === 'tv') {
+                    url = url.replace('{SEASON}', season).replace('{EPISODE}', episode);
+                }
+
+                document.getElementById('mainPlayer').src = url;
+            } catch (err) {
+                console.error("Error loading stream:", err);
+            }
+        }
+
+        // Function para i-trigger ang panonood
+        function selectContent(id, type) {
+            currentContentId = id;
+            currentContentType = type;
+
             if (type === 'tv') {
-                finalUrl = finalUrl.replace('{SEASON}', season)
-                                   .replace('{EPISODE}', episode);
+                document.getElementById('tvSelectors').style.display = 'flex';
+                setupEpisodes(); // Dapat may logic ka dito para sa dami ng episode
+            } else {
+                document.getElementById('tvSelectors').style.display = 'none';
             }
 
-            streamIframe.src = finalUrl;
-            console.log("Playing:", finalUrl);
-        } catch (e) {
-            console.error("Error loading provider:", e);
-        }
-    }
-
-    // Open Modal and Setup Content
-    function openModal(item) {
-        currentItem = item;
-        currentType = item.type || 'movie';
-        
-        document.getElementById('modalTitle').innerText = item.title;
-        document.getElementById('modalDesc').innerText = item.overview;
-        
-        if (currentType === 'tv') {
-            tvSelectors.style.display = 'flex';
-            setupTVSelectors(item);
-        } else {
-            tvSelectors.style.display = 'none';
+            loadVideo();
         }
 
-        detailModal.style.display = 'block';
-        playVideo(currentProvider, item.id, currentType);
-    }
+        // Listener para sa dropdown changes
+        document.getElementById('seasonSelect').onchange = loadVideo;
+        document.getElementById('episodeSelect').onchange = loadVideo;
 
-    // Dynamic TV Selectors logic
-    function setupTVSelectors(item) {
-        // Reset and populate seasons (Simplified example - usually fetched from API)
-        seasonSelect.innerHTML = '<option value="1">Season 1</option><option value="2">Season 2</option>';
-        episodeSelect.innerHTML = '<option value="1">Episode 1</option><option value="2">Episode 2</option>';
-    }
+        // Populate Seasons/Episodes (Sample Logic)
+        function setupEpisodes() {
+            let sHtml = '';
+            for(let i=1; i<=10; i++) sHtml += `<option value="${i}">${i}</option>`;
+            document.getElementById('seasonSelect').innerHTML = sHtml;
 
-    // Event Listeners for Automatic Update
-    seasonSelect.addEventListener('change', () => playVideo(currentProvider, currentItem.id, 'tv'));
-    episodeSelect.addEventListener('change', () => playVideo(currentProvider, currentItem.id, 'tv'));
-    document.getElementById('closeModal').onclick = () => {
-        detailModal.style.display = 'none';
-        streamIframe.src = ""; // Stop video on close
-    };
-
-    // Placeholder Data for Display (Replace with your TMDB fetch logic)
-    const sampleData = [
-        { id: 'tt0944947', title: 'Game of Thrones', type: 'tv', overview: 'Nine noble families fight for control over the lands of Westeros.' },
-        { id: 'tt0133093', title: 'The Matrix', type: 'movie', overview: 'A computer hacker learns from mysterious rebels about the true nature of his reality.' }
-    ];
-
-    sampleData.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<div class="card-info"><h3>${item.title}</h3><p>${item.type.toUpperCase()}</p></div>`;
-        card.onclick = () => openModal(item);
-        contentGrid.appendChild(card);
-    });
-</script>
-
+            let eHtml = '';
+            for(let i=1; i<=24; i++) eHtml += `<option value="${i}">${i}</option>`;
+            document.getElementById('episodeSelect').innerHTML = eHtml;
+        }
+    </script>
 </body>
 </html>
