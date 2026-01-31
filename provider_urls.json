@@ -1,24 +1,18 @@
-function stopVideo() {
-    const streamIframe = document.getElementById('streamIframe');
-    if (streamIframe) {
-        streamIframe.src = 'about:blank'; // Pinapatigil nito ang video at audio
-        console.log('Video stopped.');
-    }
-    document.body.style.overflow = ''; // Ibalik ang scrolling ng page
-}
-
-async function loadProvider(providerName, id, type) {
-    const videoLoading = document.getElementById('videoLoading');
-    videoLoading.style.display = 'flex';
-    
-    // Halimbawa ng pag-construct ng URL base sa provider_urls.json
-    // Ang {ID} ay papalitan ng TMDB o IMDb ID
-    const url = `https://vidsrc.to/embed/${type}/${id}`; 
-    
-    const streamIframe = document.getElementById('streamIframe');
-    streamIframe.src = url;
-    
-    streamIframe.onload = () => {
-        videoLoading.style.display = 'none';
-    };
+    "vidsrc.to": "https://vidsrc.to/embed/movie/{ID}",
+    "vidzee": "https://player.vidzee.wtf/embed/movie/{ID}",
+    "vidzee-4k": "https://player.vidzee.wtf/embed/movie/4k/{ID}",
+    "vixsrc.to": "https://vixsrc.to/movie/{ID}/"
+    "vixsrc.to": "https://vixsrc.to/movie/{ID}/",
+    "multiembed": "https://multiembed.mov/?video_id={ID}"
+  },
+  "tv": {
+    "111movies": "https://111movies.com/tv/{ID}/{SEASON}/{EPISODE}",
+@@ -28,6 +29,7 @@
+    "vidsrc": "https://vidsrc.cc/v2/embed/tv/{ID}/{SEASON}/{EPISODE}",
+    "vidsrc.to": "https://vidsrc.to/embed/tv/{ID}/{SEASON}/{EPISODE}",
+    "vidzee": "https://player.vidzee.wtf/embed/tv/{ID}/{SEASON}/{EPISODE}",
+    "vixsrc.to": "https://vixsrc.to/tv/{ID}/{SEASON}/{EPISODE}/"
+    "vixsrc.to": "https://vixsrc.to/tv/{ID}/{SEASON}/{EPISODE}/",
+    "multiembed": "https://multiembed.mov/?video_id={ID}&s={SEASON}&e={EPISODE}"
+  }
 }
