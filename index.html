@@ -9,174 +9,691 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Ibinabalik ang iyong Original Styling */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         :root {
             --primary: #00FF9D;
             --primary-gradient: linear-gradient(135deg, #00FF9D 0%, #00cc7a 100%);
             --secondary: #1a1a2e;
             --dark: #16213e;
             --darker: #0f1419;
+            --light: #f0f0f0;
             --text: #e6e6e6;
+            --text-secondary: #b8c5d1;
+            --accent: #ff2e63;
+            --accent-secondary: #ff4757;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow-light: 0 4px 20px rgba(0, 255, 157, 0.1);
+            --shadow-medium: 0 8px 32px rgba(0, 255, 157, 0.15);
+            --shadow-strong: 0 16px 48px rgba(0, 255, 157, 0.2);
+
+            /* Typography Variables */
+            --font-family-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            --font-family-heading: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+
+            --font-weight-light: 300;
+            --font-weight-regular: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600;
+            --font-weight-bold: 700;
+            --font-weight-extrabold: 800;
+
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+            --font-size-2xl: 1.5rem;
+            --font-size-3xl: 1.875rem;
+            --font-size-4xl: 2.25rem;
+            --font-size-5xl: 3rem;
+            --font-size-6xl: 3.75rem;
+            --font-size-7xl: 4.5rem;
+
+            --line-height-tight: 1.25;
+            --line-height-snug: 1.375;
+            --line-height-normal: 1.5;
+            --line-height-relaxed: 1.625;
+            --line-height-loose: 2;
+            --line-height-extraloose: 2.5;
+
+            --letter-spacing-tight: -0.025em;
+            --letter-spacing-normal: 0;
+            --letter-spacing-wide: 0.025em;
+            --letter-spacing-wider: 0.05em;
+            --letter-spacing-widest: 0.1em;
+            --letter-spacing-extrawide: 0.15em;
         }
-        body { background-color: var(--secondary); color: var(--text); }
-        
-        /* Fixed Video Container */
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
+
+        body {
+            background-color: var(--secondary);
+            color: var(--text);
+            line-height: 1.6;
         }
-        .video-container iframe {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 30px;
+            background: transparent;
             border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 101;
         }
 
-        /* TV Controls Styling */
-        .tv-controls {
+        .hamburger-line {
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(to bottom, var(--secondary), var(--dark));
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            height: 100%;
             display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0,255,157,0.2);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+        }
+
+        .sidebar-nav-btn {
+            display: flex;
+            align-items: center;
             gap: 15px;
-            margin-bottom: 20px;
+            width: 100%;
             padding: 15px;
-            background: var(--dark);
+            margin-bottom: 5px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
             border-radius: 8px;
+            transition: all 0.2s ease;
+            text-align: left;
         }
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        select {
-            padding: 8px;
-            border-radius: 5px;
-            background: var(--darker);
+
+        .sidebar-nav-btn:hover {
+            background-color: rgba(0,255,157,0.1);
             color: var(--primary);
-            border: 1px solid var(--primary);
         }
-    </style>
-</head>
-<body>
 
-    <header style="padding: 20px; background: var(--darker); display: flex; justify-content: space-between;">
-        <h1 style="color: var(--primary);">StreamFlix</h1>
-    </header>
+        .sidebar-nav-btn.active {
+            background-color: var(--primary);
+            color: var(--secondary);
+        }
 
-    <main style="padding: 20px;">
-        <div id="playerSection">
-            <div class="video-container">
-                <iframe id="mainPlayer" src="" allowfullscreen></iframe>
-            </div>
+        .sidebar-nav-btn i {
+            width: 20px;
+            font-size: 18px;
+        }
 
-            <div id="tvSelectors" class="tv-controls" style="display: none;">
-                <div class="control-group">
-                    <label>Season</label>
-                    <select id="seasonSelect"></select>
-                </div>
-                <div class="control-group">
-                    <label>Episode</label>
-                    <select id="episodeSelect"></select>
-                </div>
-            </div>
-        </div>
+        .sidebar-divider {
+            height: 1px;
+            background-color: rgba(0,255,157,0.2);
+            margin: 15px 0;
+        }
 
-        <div id="contentGrid" class="grid">
-            </div>
-    </main>
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
 
-    <script>
-        let currentContentId = '';
-        let currentContentType = ''; // 'movie' or 'tv'
-        let currentProvider = 'vidsrc'; // Default base sa json mo
+        .sidebar.open .sidebar-overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Styles for filters inside the sidebar */
+        .sidebar .categories-section {
+            margin-bottom: 1rem;
+        }
+        .sidebar .categories-section h4 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            padding-left: 0;
+        }
 
-        // REPAIRED PLAYBACK LOGIC
-        async function loadVideo() {
-            const season = document.getElementById('seasonSelect').value || '1';
-            const episode = document.getElementById('episodeSelect').value || '1';
-            
-            try {
-                const response = await fetch('provider_urls.json');
-                const providers = await response.json();
-                
-                let url = providers[currentContentType][currentProvider];
-                
-                // Replace placeholders
-                url = url.replace('{ID}', currentContentId);
-                if (currentContentType === 'tv') {
-                    url = url.replace('{SEASON}', season).replace('{EPISODE}', episode);
-                }
+        header {
+            background: linear-gradient(to right, var(--dark), var(--secondary));
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
 
-                document.getElementById('mainPlayer').src = url;
-            } catch (err) {
-                console.error("Error loading stream:", err);
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: var(--primary);
+            font-size: 2rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--primary), #00cc7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            position: relative;
+        }
+
+        .search-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(ellipse at center,
+                rgba(0, 255, 157, 0.1) 0%,
+                rgba(0, 255, 157, 0.05) 30%,
+                transparent 70%);
+            border-radius: 50px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        .search-container:hover::before {
+            opacity: 1;
+        }
+
+        .search-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow:
+                0 0 10px var(--primary),
+                20px 0 0 #00cc7a,
+                -20px 0 0 #ff2e63,
+                0 20px 0 var(--primary),
+                0 -20px 0 #00cc7a,
+                14px 14px 0 #ff2e63,
+                -14px -14px 0 var(--primary),
+                -14px 14px 0 #00cc7a,
+                14px -14px 0 #ff2e63;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        .search-container:hover::after {
+            opacity: 0.8;
+        }
+
+        @keyframes sparkle {
+            0%, 100% {
+                opacity: 0.8;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
             }
         }
 
-        // Function para i-trigger ang panonood
-        function selectContent(id, type) {
-            currentContentId = id;
-            currentContentType = type;
+        @keyframes pulseGlow {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
 
-            if (type === 'tv') {
-                document.getElementById('tvSelectors').style.display = 'flex';
-                setupEpisodes(); // Dapat may logic ka dito para sa dami ng episode
-            } else {
-                document.getElementById('tvSelectors').style.display = 'none';
+        .search-suggestions {
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .live-search-results {
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-suggestion {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text);
+            border-bottom: 1px solid rgba(0,255,157,0.2);
+            transition: background-color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .search-suggestion:hover {
+            background-color: rgba(0,255,157,0.1);
+        }
+
+        .search-suggestion mark {
+            background-color: var(--primary);
+            color: var(--secondary);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .search-suggestion i {
+            margin-right: 10px;
+            color: var(--primary);
+            width: 16px;
+        }
+
+        .live-results-header {
+            background: rgba(0,255,157,0.1);
+        }
+
+        .live-result-card {
+            border: 1px solid rgba(0,255,157,0.1);
+        }
+
+        .live-result-card:hover {
+            background: rgba(0,255,157,0.1);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .live-result-info h4 mark {
+            background-color: var(--primary);
+            color: var(--secondary);
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
+
+        .live-result-info p mark {
+            background-color: rgba(0,255,157,0.3);
+            color: var(--text);
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        .no-live-results {
+            background: rgba(255,46,99,0.1);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            margin: 15px;
+        }
+
+        .search-loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Animated placeholder effect */
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            transition: color 0.3s ease;
+        }
+
+        .search-box:focus::placeholder {
+            color: rgba(0, 255, 157, 0.7);
+            animation: placeholderGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes placeholderGlow {
+            0%, 100% {
+                opacity: 0.7;
+                text-shadow: 0 0 5px rgba(0, 255, 157, 0.5);
+            }
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px rgba(0, 255, 157, 0.8);
+            }
+        }
+
+        /* Typing indicator animation */
+        @keyframes typing {
+            0% { width: 0; }
+            50% { width: 100%; }
+            100% { width: 0; }
+        }
+
+        .typing-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 2px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: typing 1.4s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .btn:active {
+            transform: translateY(-2px) scale(0.98) !important;
+            transition: all 0.1s ease !important;
+        }
+
+        .category-item:active,
+        .year-item:active,
+        .trending-item:active {
+            transform: translateX(4px) scale(0.98) !important;
+            transition: all 0.1s ease !important;
+        }
+
+        /* Mobile responsiveness for live search */
+        @media (max-width: 768px) {
+            .live-search-results {
+                position: fixed;
+                top: auto;
+                left: 10px;
+                right: 10px;
+                border-radius: 15px;
+                z-index: 1001;
+                max-height: 400px;
             }
 
-            loadVideo();
+            .live-results-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                padding: 10px !important;
+            }
+
+            .live-result-card {
+                padding: 8px !important;
+            }
+
+            .live-result-poster img {
+                width: 50px !important;
+                height: 75px !important;
+            }
         }
 
-        // Listener para sa dropdown changes
-        document.getElementById('seasonSelect').onchange = loadVideo;
-        document.getElementById('episodeSelect').onchange = loadVideo;
-
-        // Populate Seasons/Episodes (Sample Logic)
-        function setupEpisodes() {
-            let sHtml = '';
-            for(let i=1; i<=10; i++) sHtml += `<option value="${i}">${i}</option>`;
-            document.getElementById('seasonSelect').innerHTML = sHtml;
-
-            let eHtml = '';
-            for(let i=1; i<=24; i++) eHtml += `<option value="${i}">${i}</option>`;
-            document.getElementById('episodeSelect').innerHTML = eHtml;
+        /* Full-screen mobile search overlay */
+        .mobile-search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--secondary);
+            z-index: 1100;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
         }
-    </script>
-// Sidebar Toggle Logic
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const sidebar = document.getElementById('sidebar');
 
-if (hamburgerMenu && sidebar) {
-    hamburgerMenu.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        sidebar.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
-        hamburgerMenu.classList.toggle('active');
-    });
-}
+        .mobile-search-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: var(--dark);
+            border-bottom: 1px solid var(--primary);
+        }
 
-// Year Filtering Logic
-function filterByYear(year, event = null) {
-    console.log('Filtering by year:', year);
-    // Alisin ang active class sa lahat
-    document.querySelectorAll('.year-item').forEach(item => item.classList.remove('active'));
-    
-    // I-activate ang piniling taon
-    if (event) {
-        event.currentTarget.classList.add('active');
-    }
-    
-    // Dito ilalagay ang pag-fetch ng data base sa taon
-    applyFiltersAndFetch(); 
-    closeSidebar(); 
-}
+        .mobile-search-input {
+            flex: 1;
+            /* Reuse existing search-box styles */
+        }
 
-function closeSidebar() {
-    if (sidebar) {
-        sidebar.classList.remove('open');
-        sidebar.style.display = 'none';
-        hamburgerMenu.classList.remove('active');
-    }
-}
-</body>
-</html>
+        .mobile-search-close {
+            font-size: 1.5rem;
+            color: var(--text);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .search-box {
+            padding: 0.7rem 1rem;
+            border-radius: 30px;
+            border: 2px solid var(--dark);
+            background-color: var(--dark);
+            color: var(--text);
+            width: 300px;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                var(--primary),
+                #00cc7a,
+                var(--primary),
+                #ff2e63,
+                var(--primary));
+            background-size: 400% 400%;
+            border-radius: 32px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            width: 350px;
+            box-shadow:
+                0 0 20px rgba(0, 255, 157, 0.3),
+                0 0 40px rgba(0, 255, 157, 0.1),
+                inset 0 0 20px rgba(0, 255, 157, 0.05);
+        }
+
+        .search-box:focus::before {
+            opacity: 1;
+        }
+
+        .search-box:hover {
+            border-color: rgba(0, 255, 157, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, #00cc7a 100%);
+            color: var(--secondary);
+            border: none;
+            border-radius: 35px;
+            padding: 0.8rem 1.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 4px 15px rgba(0, 255, 157, 0.2),
+                0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                rgba(0, 255, 157, 0.4),
+                rgba(255, 255, 255, 0.3),
+                transparent);
+            transition: left 0.8s ease;
+        }
+
+        .search-btn::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                var(--primary),
+                #00cc7a,
+                var(--primary),
+                #ff2e63,
+                var(--primary));
+            background-size: 300% 300%;
+            border-radius: 37px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            animation: gradientShift 4s ease-in-out infinite;
+        }
+
+        .search-btn:hover::before {
+            left: 100%;
+        }
+
+        .search-btn:hover {
+            background: linear-gradient(135deg, #00cc7a 0%, #00b369 100%);
+            transform: translateY(-4px) scale(1.08) rotate(2deg);
+            box-shadow:
+                0 8px 25px rgba(0, 255, 157, 0.4),
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .search-btn:hover::after {
+            opacity: 0.7;
+        }
+
+        .search-btn:active {
+            transform: translateY(-2px) scale(1.05) rotate(1deg);
+            transition: all 0.1s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2.5rem 3rem;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)),
+                          url('https://image.tmdb.org/t/p/original/8rpDcsfLJypbO6vREc0547VKqEv.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 75vh;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            background-attachment: fixed;
+            bo
